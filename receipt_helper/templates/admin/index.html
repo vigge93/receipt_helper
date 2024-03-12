@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+
+{% block body %}
+<h1>{% block title %}Administrationsverktyg{% endblock %}</h1>
+<div class="d-flex p-2">
+    <a class="navbar-text btn btn-primary p-2" style="color: white;" href="{{ url_for('admin.list_users') }}">Visa Användare</a>
+</div>
+{% endblock %}

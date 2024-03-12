@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='auth/login.css') }}">
+{% endblock %}
+
+<h1>{% block title %}Logga In{% endblock %}</h1>
+
+{% block body %}
+<form method="post" class="border px-2 py-3 border-2">
+	{{ formMacros.csrf(form) }}
+	{{ formMacros.with_errors(form.email, class='form-control', form_class='form-floating mb-3', placeholder='Email') }}
+	{{ formMacros.with_errors(form.password, class='form-control', form_class='form-floating mb-3', placeholder='Lösenord') }}
+	<div class="d-flex flex-row-reverse justify-content-between">
+		<button class="btn btn-primary btn-lg" type="submit">Logga in</button>
+	</div>
+</form>
+{% endblock %}

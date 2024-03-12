@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{%block navbar %}
+{% endblock %}
+
+{% block body %}
+    <h1>{% block title %}Användare{% endblock %}</h1>
+    <div class="list-group">
+        {% for user in users %}
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex w-100">
+                    <div class="d-flex flex-column flex-grow-1 m-2">
+                        <div class="d-flex my-2 justify-content-between">
+                            <p>{{user.name}}</p>
+                            <small>{{ user.email }}</small>
+                            <small>Senast inloggad: {{ user.lastLogin.strftime("%Y-%m-%d %H:%m")}}</small>
+                            <small>Användartyp: {{ user.userType.name }}</small>
+                            <div>
+                                <a class="navbar-text btn btn-primary p-2" style="color: white;" href="#">Nollställ lösenord</a>
+                                <a class="navbar-text btn btn-danger p-2" style="color: white;" href="#">Radera användare</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

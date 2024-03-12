@@ -1,0 +1,20 @@
+{% macro with_errors(field, label=True) %}
+    <div class="form_field {{kwargs.pop('form_class', '')}}">
+    {% if field.errors %}
+        {% set css_class = 'has_error ' + kwargs.pop('class', '') %}
+        {{ field(class=css_class, **kwargs) }}
+        <ul class="errors">{% for error in field.errors %}<li>{{ error|e }}</li>{% endfor %}</ul>
+    {% else %}
+        {{ field(**kwargs) }}
+    {% endif %}
+    {% if label %}
+        {{ field.label }}
+    {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro csrf(form) %}
+{% if form.csrf_token is defined %} <!-- Don't render csrf token if csrf is disabled, used for testing. -->
+    {{ with_errors(form.csrf_token, label=False) }}
+{% endif %}
+{% endmacro %}

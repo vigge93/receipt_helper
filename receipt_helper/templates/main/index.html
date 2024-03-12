@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{%block navbar %}
+{% endblock %}
+
+{% block body %}
+    <h1>{% block title %}Kvittoredovisningar{% endblock %}</h1>
+    <div class="list-group">
+        {% for receipt in receipts %}
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex w-100">
+                    <div class="d-flex flex-column flex-grow-1 m-2">
+                        <div class="d-flex my-2 justify-content-between">
+                            <a href="{{ url_for('main.view_receipt', id=receipt.id) }}">{{receipt.body}}</a>
+                            <small>Kvittodatum: {{receipt.receipt_date.strftime('%Y-%m-%d')}}</small>
+                            <small>Inskickat: {{receipt.submit_date.strftime('%Y-%m-%d')}}</small>
+                            <small>Status: {{receipt.status.displayName}}</small>
+                        </div>
+                        <div class="m-2">
+                            {{ receipt.activity }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
