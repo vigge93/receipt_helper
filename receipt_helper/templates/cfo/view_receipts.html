@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{%block navbar %}
+{% endblock %}
+
+{% block body %}
+    <h1>{% block title %}Alla kvittoredovisningar{% endblock %}</h1>
+    <div class="list-group">
+        {% for receipt in receipts %}
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex w-100">
+                    <div class="d-flex flex-column flex-grow-1 m-2">
+                        <div class="d-flex my-2 justify-content-between">
+                            <a href="{{ url_for('main.view_receipt', id=receipt.id) }}">{{receipt.body}}</a>
+                            <small>Inskickat av: {{receipt.user.name}}</small>
+                            <small>Kvittodatum: {{receipt.receipt_date.strftime('%Y-%m-%d')}}</small>
+                            <small>Inskickat: {{receipt.submit_date.strftime('%Y-%m-%d')}}</small>
+                            <small>{{receipt.amount/100}}kr</small>
+                            <small>Status: {{receipt.status.displayName}}</small>
+                        </div>
+                        <div class="m-2">
+                            {{ receipt.activity }}
+                        </div>
+                        <b>Flytta till:</b>
+                        <div class="d-flex my-2">
+                            {% if receipt.status.id == ReceiptStatusEnum.Pending.value %}
+                                <a class="btn btn-primary p-2 mx-2" href="{{ url_for('cfo.approve_receipt', id=receipt.id )}}">Hanterad</a>
+                                <a class="btn btn-danger p-2 mx-2" href="{{ url_for('cfo.reject_receipt', id=receipt.id )}}">Nekad</a>
+                            {% else %}
+                                <a class="btn btn-danger p-2 mx-2"  href="{{ url_for('cfo.move_receipt_to_submitted', id=receipt.id )}}">Pågående</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

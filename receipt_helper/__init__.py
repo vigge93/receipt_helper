@@ -45,15 +45,21 @@ def create_app() -> Flask:
 
     app.register_blueprint(main.bp)
     app.add_url_rule("/", endpoint="index")
-    
+
     from . import admin
+
     app.register_blueprint(admin.bp)
+
+    from . import cfo
+
+    app.register_blueprint(cfo.bp)
 
     app.register_error_handler(HTTPException, error_page)
 
     @app.route("/healthz")
     def healthz() -> dict[str, int]:
         return {"status": 1}
+
     csp = {
         "default-src": [
             "'self'",
@@ -71,7 +77,7 @@ def create_app() -> Flask:
             "'self'",
             "cdn.jsdelivr.net",
             "unpkg.com",
-            "cdnjs.cloudflare.com"
+            "cdnjs.cloudflare.com",
         ],
         "worker-src": ["'self'", "blob:"],
         "font-src": ["'self'", "*.fontawesome.com"],

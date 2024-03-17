@@ -13,6 +13,7 @@ class ReceiptStatus(db.Model):
 
 class File(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
+    path: Mapped[str]
     filename: Mapped[str] = mapped_column(unique=True)
 
 
