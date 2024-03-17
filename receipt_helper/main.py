@@ -16,6 +16,7 @@ from werkzeug.utils import secure_filename
 from receipt_helper.auth import login_required
 
 from receipt_helper import db
+from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.receipt_forms import SubmitReceiptForm
 from receipt_helper.hooks import post_submit_hook, pre_submit_hook
 from receipt_helper.model.receipt import File, Receipt
@@ -27,7 +28,11 @@ bp = Blueprint("main", __name__, url_prefix="/")
 @login_required
 def index():
     receipts = (
-        db.session.execute(db.select(Receipt).filter_by(userId=g.user.id).order_by(Receipt.statusId, Receipt.submit_date, Receipt.receipt_date))
+        db.session.execute(
+            db.select(Receipt)
+            .filter_by(userId=g.user.id)
+            .order_by(Receipt.statusId, Receipt.submit_date, Receipt.receipt_date)
+        )
         .scalars()
         .all()
     )
@@ -52,20 +57,23 @@ def add_receipt():
     file = form.file.data
 
     os.makedirs(
-        os.path.join(current_app.instance_path, "receipts", submit_date_str),
+        os.path.join(
+            current_app.instance_path, "receipts", "submitted", submit_date_str
+        ),
         exist_ok=True,
     )
 
-    filename = secure_filename(file.filename)
-    sec_body = secure_filename(body)
-    filename = f"{submit_date_str}_{sec_body}{os.path.splitext(filename)[-1]}"
+    filename = secure_filename(
+        f"{submit_date_str}_{body}{os.path.splitext(file.filename)[-1]}"
+    )
     filename = os.path.join(
-        current_app.instance_path, "receipts", submit_date_str, filename
+        current_app.instance_path, "receipts", "submitted", submit_date_str, filename
     )
     filename = uniquify(filename)
     file.save(filename)
 
-    receipt_file = File(filename=filename)
+    path, filename = os.path.split(filename)
+    receipt_file = File(filename=filename, path=path)
     receipt = Receipt(
         userId=g.user.id,
         receipt_date=receipt_date,
@@ -87,27 +95,41 @@ def uniquify(path):
     filename, extension = os.path.splitext(path)
     counter = 1
 
-    while os.path.exists(path):
+    while (
+        os.path.exists(path)
+        or db.session.execute(
+            db.select(File).filter_by(filename=os.path.split(path)[1])
+        ).scalar()
+    ):
         path = f"{filename}_{counter}{extension}"
         counter += 1
 
     return path
 
 
-@bp.route('/receipt/<int:id>')
+@bp.route("/receipt/<int:id>")
 @login_required
 def view_receipt(id: int):
     receipt = db.session.get(Receipt, id)
-    if receipt is None or receipt.userId != g.user.id:
-        abort(404)
     
-    return render_template('main/view_receipt.html', receipt=receipt)
+    owns_receipt = receipt.userId == g.user.id 
+    is_cfo = ClearanceEnum.CFO in ClearanceEnum(g.user.userTypeId)
+    authorized = owns_receipt or is_cfo
+    if receipt is None or not authorized:
+        abort(404)
 
-@bp.route('/receipt/<int:id>/document')
+    return render_template("main/view_receipt.html", receipt=receipt)
+
+
+@bp.route("/receipt/<int:id>/document")
 @login_required
 def get_receipt_document(id: int):
     receipt = db.session.get(Receipt, id)
-    if receipt is None or receipt.userId != g.user.id:
-        abort(404)
     
-    return send_from_directory(*os.path.split(receipt.file.filename))
+    owns_receipt = receipt.userId == g.user.id 
+    is_cfo = ClearanceEnum.CFO in ClearanceEnum(g.user.userTypeId)
+    authorized = owns_receipt or is_cfo
+    if receipt is None or not authorized:
+        abort(404)
+
+    return send_from_directory(receipt.file.path, receipt.file.filename)

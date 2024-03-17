@@ -7,9 +7,9 @@ class ClearanceEnum(IntFlag):
     Admin = auto()
     CFO = auto()
 
+
 @unique
 class ReceiptStatusEnum(Enum):
     Pending = 10
-    Approved = 20
-    Paid = 30
+    Handled = 80
     Rejected = 90

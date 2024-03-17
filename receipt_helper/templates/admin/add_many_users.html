@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+
+{% block body %}
+<h1>{% block title %}Nya användare{% endblock %}</h1>
+<a class="btn btn-primary p-2 my-2" href="{{ url_for('static', filename='template.csv')}}" download="template.csv">Hämta mall</a>
+<form method="post" enctype="multipart/form-data" class="border px-2 py-3 border-2">
+	{{ formMacros.csrf(form) }}
+	{{ formMacros.with_errors(form.file, class='form-control', form_class='form-floating mb-3') }}
+	<div class="d-flex flex-row-reverse justify-content-between">
+		<button class="btn btn-primary btn-lg" type="submit">Lägg till användare</button>
+	</div>
+</form>
+{% endblock %}

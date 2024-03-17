@@ -5,6 +5,7 @@ from werkzeug.exceptions import HTTPException
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
+
 # from flask_cors import CORS
 
 from receipt_helper.model.model import BaseModel
@@ -20,7 +21,8 @@ def create_app() -> Flask:
     app.config.from_mapping(
         SECRET_KEY=os.getenv("SECRET_KEY", "123"),
         # SQLALCHEMY_DATABASE_URI=os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite://"),
-        SQLALCHEMY_DATABASE_URI="sqlite:///C:\\Users\\Victor\\Desktop\\receipt_helper\\kvitto.db", echo=True
+        SQLALCHEMY_DATABASE_URI="sqlite:///kvitto.db",
+        echo=True,
     )
 
     app.config.from_pyfile("config.py", silent=True)
@@ -31,7 +33,8 @@ def create_app() -> Flask:
 
     from . import data
 
-    # data.init_db(app, db)
+    if not os.path.isfile(os.path.join(app.instance_path, "kvitto.db")):
+        data.init_db(app, db)
 
     from . import auth
 

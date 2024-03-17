@@ -13,7 +13,7 @@ from flask import (
     session,
     url_for,
 )
-from receipt_helper.enums import ClearanceEnum
+from receipt_helper.enums import ClearanceEnum, ReceiptStatusEnum
 from receipt_helper.forms.auth_forms import ChangePasswordForm, LoginForm
 
 from receipt_helper import db
@@ -23,8 +23,10 @@ from receipt_helper.model.user import User
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
+
 def context_passer():
-    return dict(ClearanceEnum=ClearanceEnum)
+    return dict(ClearanceEnum=ClearanceEnum, ReceiptStatusEnum=ReceiptStatusEnum)
+
 
 def login_required(view):
     @functools.wraps(view)
@@ -48,6 +50,7 @@ def admin_required(view):
 
     return wrapped_view
 
+
 def cfo_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
@@ -57,6 +60,7 @@ def cfo_required(view):
         return logout()
 
     return wrapped_view
+
 
 @bp.route("/login", methods=("GET", "POST"))
 def login():
@@ -96,13 +100,13 @@ def change_password():
         return render_template("auth/new_password.html", form=form)
     old_password = form.old_password.data
     new_password = form.new_password.data
-    
+
     error = None
     user = db.session.get(User, g.user.id)
-    
+
     if not check_password_hash(user.password, old_password):
         error = "Felaktigt lösenord."
-    
+
     if error is not None:
         flash(error)
         return render_template("auth/new_password.html", form=form)
@@ -110,7 +114,8 @@ def change_password():
     user.password = generate_password_hash(new_password)
     user.needs_password_change = False
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for("index"))
+
 
 @bp.route("/logout")
 def logout():

@@ -13,7 +13,7 @@
                         <div class="d-flex my-2 justify-content-between">
                             <p>{{user.name}}</p>
                             <small>{{ user.email }}</small>
-                            <small>Senast inloggad: {{ user.lastLogin.strftime("%Y-%m-%d %H:%m")}}</small>
+                            <small>Senast inloggad: {{ user.lastLogin.strftime("%Y-%m-%d %H:%m") if user.lastLogin else "Aldrig" }}</small>
                             <small>Användartyp: {{ user.userType.name }}</small>
                             <div>
                                 <a class="navbar-text btn btn-primary p-2" style="color: white;" href="#">Nollställ lösenord</a>

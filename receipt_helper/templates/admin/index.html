@@ -7,6 +7,8 @@
 {% block body %}
 <h1>{% block title %}Administrationsverktyg{% endblock %}</h1>
 <div class="d-flex p-2">
-    <a class="navbar-text btn btn-primary p-2" style="color: white;" href="{{ url_for('admin.list_users') }}">Visa Användare</a>
+    <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('admin.list_users') }}">Visa Användare</a>
+    <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('admin.add_single_user') }}">Lägg till en användare</a>
+    <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('admin.add_many_users') }}">Lägg till flera användare</a>
 </div>
 {% endblock %}
