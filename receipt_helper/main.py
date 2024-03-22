@@ -1,5 +1,7 @@
 import datetime
 import os
+import tempfile
+
 from flask import (
     Blueprint,
     abort,
@@ -8,14 +10,15 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     url_for,
 )
+from pypdf import PdfReader, PdfWriter
 from werkzeug.utils import secure_filename
 
-from receipt_helper.auth import login_required
-
 from receipt_helper import db
+from receipt_helper.auth import login_required
 from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.receipt_forms import SubmitReceiptForm
 from receipt_helper.hooks import post_submit_hook, pre_submit_hook
@@ -51,14 +54,13 @@ def add_receipt():
     body = form.body.data
     activity = form.activity.data
     amount = int(form.amount.data * 100)
-    external = form.external.data
     submit_date = datetime.date.today()
     submit_date_str = submit_date.isoformat()
     file = form.file.data
 
     os.makedirs(
         os.path.join(
-            current_app.instance_path, "receipts", "submitted", submit_date_str
+            current_app.config["RECEIPTS_STORAGE_PATH"], "submitted", submit_date_str
         ),
         exist_ok=True,
     )
@@ -67,7 +69,10 @@ def add_receipt():
         f"{submit_date_str}_{body}{os.path.splitext(file.filename)[-1]}"
     )
     filename = os.path.join(
-        current_app.instance_path, "receipts", "submitted", submit_date_str, filename
+        current_app.config["RECEIPTS_STORAGE_PATH"],
+        "submitted",
+        submit_date_str,
+        filename,
     )
     filename = uniquify(filename)
     file.save(filename)
@@ -81,7 +86,6 @@ def add_receipt():
         body=body,
         activity=activity,
         amount=amount,
-        external=external,
         file=receipt_file,
     )
 
@@ -111,8 +115,8 @@ def uniquify(path):
 @login_required
 def view_receipt(id: int):
     receipt = db.session.get(Receipt, id)
-    
-    owns_receipt = receipt.userId == g.user.id 
+
+    owns_receipt = receipt.userId == g.user.id
     is_cfo = ClearanceEnum.CFO in ClearanceEnum(g.user.userTypeId)
     authorized = owns_receipt or is_cfo
     if receipt is None or not authorized:
@@ -121,15 +125,53 @@ def view_receipt(id: int):
     return render_template("main/view_receipt.html", receipt=receipt)
 
 
-@bp.route("/receipt/<int:id>/document")
+@bp.route("/receipt/<int:id>/receipt")
 @login_required
 def get_receipt_document(id: int):
     receipt = db.session.get(Receipt, id)
-    
-    owns_receipt = receipt.userId == g.user.id 
+
+    owns_receipt = receipt.userId == g.user.id
     is_cfo = ClearanceEnum.CFO in ClearanceEnum(g.user.userTypeId)
     authorized = owns_receipt or is_cfo
     if receipt is None or not authorized:
         abort(404)
 
     return send_from_directory(receipt.file.path, receipt.file.filename)
+
+
+@bp.route("/receipt/<int:id>/document")
+@login_required
+def get_document(id: int):
+    receipt = db.session.get(Receipt, id)
+
+    owns_receipt = receipt.userId == g.user.id
+    is_cfo = ClearanceEnum.CFO in ClearanceEnum(g.user.userTypeId)
+    authorized = owns_receipt or is_cfo
+    if receipt is None or not authorized:
+        abort(404)
+
+    reader = PdfReader(
+        os.path.join(
+            current_app.root_path, current_app.template_folder, "kvittoredovisning.pdf"
+        )
+    )
+    writer = PdfWriter()
+
+    writer.append(reader)
+
+    writer.update_page_form_field_values(
+        writer.pages[0],
+        {
+            "Datum_kvittot": receipt.receipt_date.date().isoformat(),
+            "Datum_idag": receipt.submit_date.date().isoformat(),
+            "organ": receipt.body,
+            "Kortinnehavare": receipt.user.name,
+            "aktivitet": receipt.activity,
+            "summa": receipt.amount / 100,
+        },
+    )
+
+    file = tempfile.TemporaryFile("w+b", suffix=".pdf")
+    writer.write(file)
+    file.seek(0)
+    return send_file(file, download_name=f"kvittoredovisning.pdf")

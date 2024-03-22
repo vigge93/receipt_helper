@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField, FileRequired
 from wtforms import StringField, validators
-from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 
 class AddSingleUserForm(FlaskForm):

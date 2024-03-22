@@ -1,6 +1,7 @@
+import csv
 import os
 from uuid import uuid4
-import csv
+
 from flask import (
     Blueprint,
     current_app,
@@ -10,15 +11,15 @@ from flask import (
     request,
     url_for,
 )
+from werkzeug.datastructures import MultiDict
+from werkzeug.security import generate_password_hash
 
 from receipt_helper import db
 from receipt_helper.auth import admin_required, login_required
 from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.user_forms import AddManyUsersForm, AddSingleUserForm
 from receipt_helper.model.user import User
-
-from werkzeug.security import generate_password_hash
-from werkzeug.datastructures import MultiDict
+from receipt_helper.util import send_email
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -68,8 +69,20 @@ def add_user(name, email):
 
     db.session.add(user)
 
-    # TODO: Send email with temp password!
-    print(email, temp_password, sep=": ")
+    send_email(
+        email,
+        "Konto för kvittoredovisning skapat!",
+        f"""Hej
+               
+Det har skapats ett konto åt dig för att kunna hantera kvittoredovisningar. Inloggningsuppgifter står nedan.
+
+Länk: {url_for('main.index', _external=True)}
+Användarnamn: {email}
+Lösenord: {temp_password}
+
+Ovanstående lösenord är temporärt och vid första inloggning kommer du behöva byta ditt lösenord.
+""",
+    )
 
 
 @bp.route("/add_many_users", methods=("GET", "POST"))

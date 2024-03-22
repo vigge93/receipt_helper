@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from receipt_helper import db
@@ -9,6 +10,7 @@ from receipt_helper.model.user import User
 class ReceiptStatus(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     displayName: Mapped[str]
+    displayColor: Mapped[str]
 
 
 class File(db.Model):
@@ -27,12 +29,12 @@ class Receipt(db.Model):
     activity: Mapped[str]
     amount: Mapped[int]
     """Pennies"""
-    external: Mapped[bool]
     statusId: Mapped[int] = mapped_column(
         db.ForeignKey(ReceiptStatus.id), default=ReceiptStatusEnum.Pending.value
     )
     statusComment: Mapped[str | None]
     fileId: Mapped[int] = mapped_column(db.ForeignKey(File.id))
+    archived: Mapped[bool] = mapped_column(default=False)
 
     user: Mapped[User] = relationship()
     status: Mapped[ReceiptStatus] = relationship()

@@ -1,16 +1,14 @@
 import os
 
-from flask import Flask, redirect, render_template, url_for
-from werkzeug.exceptions import HTTPException
-
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
-
-# from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 
 from receipt_helper.model.model import BaseModel
 
-from werkzeug.security import generate_password_hash
+# from flask_cors import CORS
+
 
 db = SQLAlchemy(engine_options={"pool_pre_ping": True}, model_class=BaseModel)
 
@@ -19,22 +17,25 @@ def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_mapping(
-        SECRET_KEY=os.getenv("SECRET_KEY", "123"),
-        # SQLALCHEMY_DATABASE_URI=os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite://"),
-        SQLALCHEMY_DATABASE_URI="sqlite:///kvitto.db",
+        SECRET_KEY=os.getenv("SECRET_KEY"),
+        SQLALCHEMY_DATABASE_URI=os.getenv("SQLALCHEMY_DATABASE_URI"),
+        RECEIPTS_STORAGE_PATH=os.getenv(
+            "RECEIPTS_STORAGE_PATH", os.path.join(app.instance_path, "receipts")
+        ),
+        RECEIPTS_EMAIL_RECEIPT_RECIPIENT=os.getenv("RECEIPTS_EMAIL_RECIPIENT"),
+        RECEIPTS_EMAIL_SENDER=os.getenv("RECEIPTS_EMAIL_SENDER"),
+        RECEIPTS_SMTP_HOST=os.getenv("RECEIPTS_SMTP_HOST"),
+        RECEIPTS_SMTP_USERNAME=os.getenv("RECEIPTS_SMTP_USERNAME"),
+        RECEIPTS_SMTP_PASSWORD=os.getenv("RECEIPTS_SMTP_PASSWORD"),
         echo=True,
     )
 
     app.config.from_pyfile("config.py", silent=True)
 
-    os.makedirs(os.path.join(app.instance_path, "receipts"), exist_ok=True)
+    os.makedirs(app.config["RECEIPTS_STORAGE_PATH"], exist_ok=True)
+    os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
-
-    from . import data
-
-    if not os.path.isfile(os.path.join(app.instance_path, "kvitto.db")):
-        data.init_db(app, db)
 
     from . import auth
 

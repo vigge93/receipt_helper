@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, validators, DateField, DecimalField, BooleanField
-from flask_wtf.file import FileField, FileRequired, FileAllowed
+from flask_wtf.file import FileAllowed, FileField, FileRequired
+from wtforms import DateField, DecimalField, StringField, validators
 
 
 class SubmitReceiptForm(FlaskForm):
@@ -32,4 +32,10 @@ class SubmitReceiptForm(FlaskForm):
             ),
         ],
     )
-    external = BooleanField("Betalt med privat kort")
+
+
+class RejectReceiptForm(FlaskForm):
+    reason = StringField(
+        "Anledning",
+        [validators.data_required("Anledning krävs"), validators.Length(max=250)],
+    )

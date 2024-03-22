@@ -8,6 +8,7 @@
 <h1>{% block title %}Ekonomiverktyg{% endblock %}</h1>
 <div class="d-flex p-2">
     <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('cfo.view_receipts') }}">Visa Kvittoredovisningar</a>
+    <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('cfo.view_archived_receipts') }}">Visa Arkiv</a>
     <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('cfo.get_receipts') }}">Ladda ner kvitton</a>
 </div>
 {% endblock %}

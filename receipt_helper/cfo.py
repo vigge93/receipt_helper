@@ -1,5 +1,6 @@
 import datetime
 import os
+import tempfile
 from shutil import make_archive, move
 
 from flask import (
@@ -7,13 +8,21 @@ from flask import (
     current_app,
     redirect,
     render_template,
-    send_from_directory,
+    request,
+    send_file,
     url_for,
 )
 
-from receipt_helper.auth import cfo_required, login_required
 from receipt_helper import db
+from receipt_helper.auth import cfo_required, login_required
 from receipt_helper.enums import ReceiptStatusEnum
+from receipt_helper.forms.receipt_forms import RejectReceiptForm
+from receipt_helper.hooks import (
+    post_approve_hook,
+    post_reject_hook,
+    pre_approve_hook,
+    pre_reject_hook,
+)
 from receipt_helper.model.receipt import File, Receipt
 
 bp = Blueprint("cfo", __name__, url_prefix="/cfo")
@@ -32,9 +41,9 @@ def index():
 def view_receipts():
     receipts = (
         db.session.execute(
-            db.select(Receipt).order_by(
-                Receipt.statusId, Receipt.submit_date, Receipt.receipt_date
-            )
+            db.select(Receipt)
+            .filter_by(archived=False)
+            .order_by(Receipt.statusId, Receipt.submit_date, Receipt.receipt_date)
         )
         .scalars()
         .all()
@@ -43,16 +52,45 @@ def view_receipts():
     return render_template("cfo/view_receipts.html", receipts=receipts)
 
 
+@bp.route("/view_archived_receipts")
+@login_required
+@cfo_required
+def view_archived_receipts():
+    receipts = (
+        db.session.execute(
+            db.select(Receipt)
+            .filter_by(archived=True)
+            .order_by(Receipt.statusId, Receipt.submit_date, Receipt.receipt_date)
+        )
+        .scalars()
+        .all()
+    )
+
+    return render_template("cfo/view_archive.html", receipts=receipts)
+
+
 @bp.route("/get_receipts")
 @login_required
 @cfo_required
 def get_receipts():
+    file = tempfile.TemporaryFile("w+b", suffix=".zip")
     make_archive(
-        os.path.join(current_app.instance_path, "receipts"),
+        file.name,
         "zip",
-        os.path.join(current_app.instance_path, "receipts"),
+        current_app.config["RECEIPTS_STORAGE_PATH"],
     )
-    return send_from_directory(current_app.instance_path, "receipts.zip")
+    file.seek(0)
+    return send_file(file, download_name="kvitton.zip")
+
+
+@bp.route("/<int:id>/archive")
+@login_required
+@cfo_required
+def archive_receipt(id: int):
+    receipt = db.session.get(Receipt, id)
+    receipt.archived = True
+    db.session.commit()
+    return redirect(url_for("cfo.view_receipts"))
 
 
 @bp.route("/<int:id>/approve")
@@ -61,25 +99,39 @@ def get_receipts():
 def approve_receipt(id: int):
     receipt = db.session.get(Receipt, id)
 
+    pre_approve_hook(receipt)
+
     receipt.statusId = ReceiptStatusEnum.Handled.value
 
     move_file(receipt.file, "approved", receipt.submit_date.date())
 
     db.session.commit()
+
+    post_approve_hook(receipt)
     return redirect(url_for("cfo.view_receipts"))
 
 
-@bp.route("/<int:id>/reject")
+@bp.route("/<int:id>/reject", methods=("GET", "POST"))
 @login_required
 @cfo_required
 def reject_receipt(id: int):
+    form = RejectReceiptForm()
+    if request.method != "POST" or not form.validate_on_submit():
+        return render_template("cfo/reject_receipt.html", form=form)
+
+    reason = form.reason.data
+
     receipt = db.session.get(Receipt, id)
 
+    pre_reject_hook(receipt)
     receipt.statusId = ReceiptStatusEnum.Rejected.value
+    receipt.statusComment = reason
 
     move_file(receipt.file, "rejected", receipt.submit_date.date())
 
     db.session.commit()
+    post_reject_hook(receipt)
+
     return redirect(url_for("cfo.view_receipts"))
 
 
@@ -98,7 +150,9 @@ def move_receipt_to_submitted(id: int):
 
 
 def move_file(file: File, dest: str, date: datetime.date):
-    path = os.path.join(current_app.instance_path, "receipts", dest, date.isoformat())
+    path = os.path.join(
+        current_app.config["RECEIPTS_STORAGE_PATH"], dest, date.isoformat()
+    )
     os.makedirs(
         path,
         exist_ok=True,

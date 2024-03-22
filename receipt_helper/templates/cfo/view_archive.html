@@ -4,7 +4,7 @@
 {% endblock %}
 
 {% block body %}
-    <h1>{% block title %}Alla kvittoredovisningar{% endblock %}</h1>
+    <h1>{% block title %}Arkiverade kvittoredovisningar{% endblock %}</h1>
     <div class="list-group">
         {% for receipt in receipts %}
             <div class="list-group-item list-group-item-action">
@@ -20,16 +20,6 @@
                         </div>
                         <div class="m-2">
                             {{ receipt.activity }}
-                        </div>
-                        <b>Flytta till:</b>
-                        <div class="d-flex my-2">
-                            {% if receipt.status.id == ReceiptStatusEnum.Pending.value %}
-                                <a class="btn btn-primary p-2 mx-2" href="{{ url_for('cfo.approve_receipt', id=receipt.id )}}">Hanterad</a>
-                                <a class="btn btn-danger p-2 mx-2" href="{{ url_for('cfo.reject_receipt', id=receipt.id )}}">Neka</a>
-                                {% else %}
-                                <a class="btn btn-primary p-2 mx-2" href="{{ url_for('cfo.archive_receipt', id=receipt.id )}}">Arkivera</a>
-                                <a class="btn btn-danger p-2 mx-2"  href="{{ url_for('cfo.move_receipt_to_submitted', id=receipt.id )}}">Pågående</a>
-                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -14,7 +14,7 @@
                             <a href="{{ url_for('main.view_receipt', id=receipt.id) }}">{{receipt.body}}</a>
                             <small>Kvittodatum: {{receipt.receipt_date.strftime('%Y-%m-%d')}}</small>
                             <small>Inskickat: {{receipt.submit_date.strftime('%Y-%m-%d')}}</small>
-                            <small>Status: {{receipt.status.displayName}}</small>
+                            <small style="background: {{ receipt.status.displayColor }};">Status: {{receipt.status.displayName}}</small>
                         </div>
                         <div class="m-2">
                             {{ receipt.activity }}

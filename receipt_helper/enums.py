@@ -1,4 +1,4 @@
-from enum import Enum, IntFlag, unique, auto
+from enum import Enum, IntFlag, auto, unique
 
 
 @unique
@@ -13,3 +13,10 @@ class ReceiptStatusEnum(Enum):
     Pending = 10
     Handled = 80
     Rejected = 90
+
+
+STATUS_COLOR_MAP = {
+    ReceiptStatusEnum.Pending: "yellow",
+    ReceiptStatusEnum.Handled: "green",
+    ReceiptStatusEnum.Rejected: "red",
+}

@@ -1,10 +1,8 @@
-from datetime import datetime
-from enum import IntEnum, unique
 import functools
+from datetime import datetime
 
 from flask import (
     Blueprint,
-    abort,
     flash,
     g,
     redirect,
@@ -13,12 +11,11 @@ from flask import (
     session,
     url_for,
 )
-from receipt_helper.enums import ClearanceEnum, ReceiptStatusEnum
-from receipt_helper.forms.auth_forms import ChangePasswordForm, LoginForm
-
-from receipt_helper import db
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from receipt_helper import db
+from receipt_helper.enums import ClearanceEnum, ReceiptStatusEnum
+from receipt_helper.forms.auth_forms import ChangePasswordForm, LoginForm
 from receipt_helper.model.user import User
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
