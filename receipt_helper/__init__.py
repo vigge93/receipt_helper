@@ -27,7 +27,9 @@ def create_app() -> Flask:
         RECEIPTS_SMTP_HOST=os.getenv("RECEIPTS_SMTP_HOST"),
         RECEIPTS_SMTP_USERNAME=os.getenv("RECEIPTS_SMTP_USERNAME"),
         RECEIPTS_SMTP_PASSWORD=os.getenv("RECEIPTS_SMTP_PASSWORD"),
-        echo=True,
+        RECEIPTS_ADMIN_USER_EMAIL=os.getenv("RECEIPTS_ADMIN_USER_EMAIL"),
+        RECEIPTS_ADMIN_USER_NAME=os.getenv("RECEIPTS_ADMIN_USER_NAME"),
+        RECEIPTS_ADMIN_USER_PASSWORD=os.getenv("RECEIPTS_ADMIN_USER_PASSWORD")
     )
 
     app.config.from_pyfile("config.py", silent=True)
@@ -36,6 +38,9 @@ def create_app() -> Flask:
     os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
+    
+    from receipt_helper.data import init_db
+    init_db(app, db)
 
     from . import auth
 
