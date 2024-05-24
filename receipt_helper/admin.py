@@ -60,11 +60,11 @@ def add_single_user():
     return redirect(url_for("admin.index"))
 
 
-def add_user(name, email):
+def add_user(name: str, email: str):
     temp_password = str(uuid4())
 
     user = User(
-        email=email,
+        email=email.lower(),
         name=name,
         password=generate_password_hash(temp_password),
         userTypeId=ClearanceEnum.User.value,
