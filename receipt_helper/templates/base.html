@@ -23,7 +23,7 @@
   
   <div class="container-fluid">
     <nav class="navbar navbar-light bg-light">
-      <a class="navbar-brand" href="{{ url_for('main.index') }}">Kvittoredovisning</a>
+      <a class="navbar-brand mx-2" href="{{ url_for('main.index') }}"><img src="{{ url_for('static', filename='logo.png')}}" height="40"> Kvittoredovisning</a>
       {% block navbar %}{% endblock %}
         {% if g.user %}
             <div>
@@ -41,7 +41,7 @@
               </div>
               {% endif %}
             </nav>
-            {% if request.host in request.referrer and request.url != request.referrer and 'auth' not in request.referrer and 'auth' not in request.url %}
+            {% if request.referrer and request.host in request.referrer and request.url != request.referrer and 'auth' not in request.referrer and 'auth' not in request.url %}
               <a class="btn btn-light my-2" onclick="history.back()"><i class="fas fa-long-arrow-alt-left"></i> Tillbaka</a>
             {% endif %}
     {% for message in get_flashed_messages() %}
