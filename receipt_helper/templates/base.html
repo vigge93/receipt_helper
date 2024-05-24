@@ -38,10 +38,12 @@
             <div>
                 <a class="navbar-text btn btn-primary p-2" style="color: white;" href="{{ url_for('auth.change_password') }}">Byt lösenord</a>
                 <a class="navbar-text btn btn-danger p-2" style="color: white;" href="{{ url_for('auth.logout') }}">Logga ut</a>
-            </div>
-        {% endif %}
-    </nav>
-  
+              </div>
+              {% endif %}
+            </nav>
+            {% if request.host in request.referrer and request.url != request.referrer and 'auth' not in request.referrer and 'auth' not in request.url %}
+              <a class="btn btn-light my-2" onclick="history.back()"><i class="fas fa-long-arrow-alt-left"></i> Tillbaka</a>
+            {% endif %}
     {% for message in get_flashed_messages() %}
     <div class="alert alert-danger">{{ message }}</div>
     {% endfor %} {% block body %}{% endblock %}
