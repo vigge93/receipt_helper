@@ -17,6 +17,6 @@ class ReceiptStatusEnum(Enum):
 
 STATUS_COLOR_MAP = {
     ReceiptStatusEnum.Pending: "yellow",
-    ReceiptStatusEnum.Handled: "green",
+    ReceiptStatusEnum.Handled: "lightgreen",
     ReceiptStatusEnum.Rejected: "red",
 }
