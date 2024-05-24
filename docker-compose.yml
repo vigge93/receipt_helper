@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  ReceiptHelper:
+    image: receipthelper
+    build: .
+    ports:
+      - 8000:8000
+    volumes:
+      - receipts-volume:/receipts
+    environment:
+      - SECRET_KEY=
+      - SQLALCHEMY_DATABASE_URI=
+      - RECEIPTS_STORAGE_PATH=
+      - RECEIPTS_EMAIL_RECEIPT_RECIPIENT=
+      - RECEIPTS_EMAIL_SENDER=
+      - RECEIPTS_SMTP_HOST=
+      - RECEIPTS_SMTP_USERNAME=
+      - RECEIPTS_SMTP_PASSWORD=
+      - RECEIPTS_ADMIN_USER_EMAIL=
+      - RECEIPTS_ADMIN_USER_NAME=
+      - RECEIPTS_ADMIN_USER_PASSWORD=
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  receipts-volume:

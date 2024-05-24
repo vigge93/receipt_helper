@@ -22,7 +22,7 @@ def create_app() -> Flask:
         RECEIPTS_STORAGE_PATH=os.getenv(
             "RECEIPTS_STORAGE_PATH", os.path.join(app.instance_path, "receipts")
         ),
-        RECEIPTS_EMAIL_RECEIPT_RECIPIENT=os.getenv("RECEIPTS_EMAIL_RECIPIENT"),
+        RECEIPTS_EMAIL_RECEIPT_RECIPIENT=os.getenv("RECEIPTS_EMAIL_RECEIPT_RECIPIENT"),
         RECEIPTS_EMAIL_SENDER=os.getenv("RECEIPTS_EMAIL_SENDER"),
         RECEIPTS_SMTP_HOST=os.getenv("RECEIPTS_SMTP_HOST"),
         RECEIPTS_SMTP_USERNAME=os.getenv("RECEIPTS_SMTP_USERNAME"),
@@ -39,8 +39,8 @@ def create_app() -> Flask:
 
     db.init_app(app)
     
-    from receipt_helper.data import init_db
-    init_db(app, db)
+    from . import data
+    data.init_db(app, db)
 
     from . import auth
 
@@ -66,29 +66,29 @@ def create_app() -> Flask:
     def healthz() -> dict[str, int]:
         return {"status": 1}
 
-    csp = {
-        "default-src": [
-            "'self'",
-            "*.icons8.com",
-            "*.fontawesome.com",
-            "'unsafe-inline'",
-            "*.googleapis.com",
-            "*.blob.core.windows.net",
-            "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css",
-            "data:",
-        ],
-        "script-src": [
-            "code.jquery.com",
-            "'unsafe-inline'",
-            "'self'",
-            "cdn.jsdelivr.net",
-            "unpkg.com",
-            "cdnjs.cloudflare.com",
-        ],
-        "worker-src": ["'self'", "blob:"],
-        "font-src": ["'self'", "*.fontawesome.com"],
-    }
-    Talisman(app, content_security_policy=csp)
+    # csp = {
+    #     "default-src": [
+    #         "'self'",
+    #         "*.icons8.com",
+    #         "*.fontawesome.com",
+    #         "'unsafe-inline'",
+    #         "*.googleapis.com",
+    #         "*.blob.core.windows.net",
+    #         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css",
+    #         "data:",
+    #     ],
+    #     "script-src": [
+    #         "code.jquery.com",
+    #         "'unsafe-inline'",
+    #         "'self'",
+    #         "cdn.jsdelivr.net",
+    #         "unpkg.com",
+    #         "cdnjs.cloudflare.com",
+    #     ],
+    #     "worker-src": ["'self'", "blob:"],
+    #     "font-src": ["'self'", "*.fontawesome.com"],
+    # }
+    # Talisman(app, content_security_policy=csp)
     # CORS(app)
     return app
 

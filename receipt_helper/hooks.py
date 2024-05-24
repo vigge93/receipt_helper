@@ -13,7 +13,7 @@ def pre_submit_hook(form: SubmitReceiptForm):
 def post_submit_hook(receipt: Receipt):
     """Called after receipt has been committed to database."""
     send_email(
-        current_app.config["RECEIPTS_EMAIL_RECIPIENT"],
+        current_app.config["RECEIPTS_EMAIL_RECEIPT_RECIPIENT"],
         "Ny kvittoredovisning",
         f"""Hej,
 

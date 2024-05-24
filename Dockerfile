@@ -18,13 +18,18 @@ RUN set -ex \
     && apk add --virtual rundeps $runDeps \
     && apk del .build-deps
 
+RUN apk add --no-cache sqlite
+
 WORKDIR /app
 
 ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH
 
 EXPOSE 8000
+
 COPY . .
+
+RUN /env/bin/pip install -e .
 
 # This must be comma-separated
 CMD [ "gunicorn", "receipt_helper:create_app()", "--bind=0.0.0.0:8000" ]
