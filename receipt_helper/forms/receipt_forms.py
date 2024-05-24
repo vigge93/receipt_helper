@@ -8,13 +8,6 @@ class SubmitReceiptForm(FlaskForm):
         "Datum på kvittot",
         [validators.DataRequired("Kvittodatum krävs")],
     )
-    body = StringField(
-        "Sektion/Utbildningsförening",
-        [
-            validators.DataRequired("Sektion/utbildningsförening krävs"),
-            validators.Length(max=50),
-        ],
-    )
     activity = StringField(
         "Aktivitet",
         [validators.DataRequired("Aktivitet krävs"), validators.Length(max=250)],

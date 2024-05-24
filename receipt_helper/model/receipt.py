@@ -24,8 +24,6 @@ class Receipt(db.Model):
     userId: Mapped[int] = mapped_column(db.ForeignKey(User.id))
     receipt_date: Mapped[datetime]
     submit_date: Mapped[datetime]
-    body: Mapped[str]
-    """Sektion/Utbildningsförening"""
     activity: Mapped[str]
     amount: Mapped[int]
     """Pennies"""

@@ -9,7 +9,6 @@
 <form method="post" enctype="multipart/form-data" class="border px-2 py-3 border-2">
 	{{ formMacros.csrf(form) }}
 	{{ formMacros.with_errors(form.receipt_date, class='form-control', form_class='form-floating mb-3', placeholder='YYYY-MM-DD') }}
-	{{ formMacros.with_errors(form.body, class='form-control', form_class='form-floating mb-3') }}
 	{{ formMacros.with_errors(form.activity, class='form-control', form_class='form-floating mb-3', placeholder="Pluggkväll, fika till möte, mat till AS osv.") }}
 	{{ formMacros.with_errors(form.amount, class='form-control', form_class='form-floating mb-3') }}
 	{{ formMacros.with_errors(form.file) }}

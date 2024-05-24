@@ -51,7 +51,6 @@ def add_receipt():
 
     pre_submit_hook(form)
     receipt_date = form.receipt_date.data
-    body = form.body.data
     activity = form.activity.data
     amount = int(form.amount.data * 100)
     submit_date = datetime.date.today()
@@ -66,7 +65,7 @@ def add_receipt():
     )
 
     filename = secure_filename(
-        f"{submit_date_str}_{body}{os.path.splitext(file.filename)[-1]}"
+        f"{submit_date_str}_{g.user.name}{os.path.splitext(file.filename)[-1]}"
     )
     filename = os.path.join(
         current_app.config["RECEIPTS_STORAGE_PATH"],
@@ -83,7 +82,6 @@ def add_receipt():
         userId=g.user.id,
         receipt_date=receipt_date,
         submit_date=submit_date,
-        body=body,
         activity=activity,
         amount=amount,
         file=receipt_file,

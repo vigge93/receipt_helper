@@ -11,15 +11,12 @@
                 <div class="d-flex w-100">
                     <div class="d-flex flex-column flex-grow-1 m-2">
                         <div class="d-flex my-2 justify-content-between">
-                            <a href="{{ url_for('main.view_receipt', id=receipt.id) }}">{{receipt.body}}</a>
+                            <a href="{{ url_for('main.view_receipt', id=receipt.id) }}">{{receipt.activity}}</a>
                             <small>Inskickat av: {{receipt.user.name}}</small>
                             <small>Kvittodatum: {{receipt.receipt_date.strftime('%Y-%m-%d')}}</small>
                             <small>Inskickat: {{receipt.submit_date.strftime('%Y-%m-%d')}}</small>
                             <small>{{receipt.amount/100}}kr</small>
                             <small style="background: {{ receipt.status.displayColor }};">Status: {{receipt.status.displayName}}</small>
-                        </div>
-                        <div class="m-2">
-                            {{ receipt.activity }}
                         </div>
                     </div>
                 </div>
