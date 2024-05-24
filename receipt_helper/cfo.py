@@ -73,11 +73,12 @@ def view_archived_receipts():
 @login_required
 @cfo_required
 def get_receipts():
-    file = tempfile.TemporaryFile("w+b", suffix=".zip")
+    file = tempfile.TemporaryFile("w+b", suffix=".zip", delete=False)
+    print(current_app.config["RECEIPTS_STORAGE_PATH"])
     make_archive(
-        file.name,
+        file.name.removesuffix(".zip"),
         "zip",
-        current_app.config["RECEIPTS_STORAGE_PATH"],
+        current_app.config["RECEIPTS_STORAGE_PATH"]
     )
     file.seek(0)
     return send_file(file, download_name="kvitton.zip")
