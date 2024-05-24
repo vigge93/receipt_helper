@@ -73,7 +73,7 @@ def view_archived_receipts():
 @login_required
 @cfo_required
 def get_receipts():
-    file = tempfile.TemporaryFile("w+b", suffix=".zip", delete=False)
+    file = tempfile.TemporaryFile("w+b", suffix=".zip")
     print(current_app.config["RECEIPTS_STORAGE_PATH"])
     make_archive(
         file.name.removesuffix(".zip"),
