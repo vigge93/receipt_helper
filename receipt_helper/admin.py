@@ -4,8 +4,10 @@ from uuid import uuid4
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -18,6 +20,7 @@ from receipt_helper import db
 from receipt_helper.auth import admin_required, login_required
 from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.user_forms import AddManyUsersForm, AddSingleUserForm
+from receipt_helper.model.receipt import Receipt
 from receipt_helper.model.user import User
 from receipt_helper.util import send_email
 
@@ -35,7 +38,7 @@ def index():
 @login_required
 @admin_required
 def list_users():
-    users = db.session.execute(db.select(User)).scalars().all()
+    users = db.session.execute(db.select(User).where(User.id > 0)).scalars().all()
     return render_template("admin/list_users.html", users=users)
 
 
@@ -115,3 +118,99 @@ def add_many_users():
         db.session.commit()
     flash(f"Lade till {added_users} användare!")
     return redirect(url_for("admin.index"))
+
+@bp.route("/<int:id>/reset_password")
+@login_required
+@admin_required
+def reset_password(id: int):
+    validate_user_id(id)
+    user = db.session.get(User, id)
+    email = user.email
+
+    temp_password = str(uuid4())
+
+    user.password = generate_password_hash(temp_password)
+    user.needs_password_change = True
+    db.session.commit()
+
+    send_email(
+        email,
+        "Lösenord för kvittoredovisning nollställt!",
+        f"""Hej
+               
+Ditt lösenord för kvittoredovisningar har nollställts. Ditt temporära lösenord anges nedan.
+
+Lösenord: {temp_password}
+Länk: {url_for('main.index', _external=True)}
+
+Ovanstående lösenord är temporärt och vid första inloggning kommer du behöva byta ditt lösenord.
+""")
+    flash(f"Lösenord nollställt för {user.name}")
+    return redirect(url_for("admin.list_users"))
+
+@bp.route("/<int:id>/make_admin")
+@login_required
+@admin_required
+def make_admin(id: int):
+    validate_user_id(id)
+    user = db.session.get(User, id)
+    user.userTypeId = user.userTypeId | ClearanceEnum.Admin
+    db.session.commit()
+    return redirect(url_for("admin.list_users"))
+
+@bp.route("/<int:id>/make_cfo")
+@login_required
+@admin_required
+def make_cfo(id: int):
+    validate_user_id(id)
+    user = db.session.get(User, id)
+    user.userTypeId = user.userTypeId | ClearanceEnum.CFO
+    db.session.commit()
+    return redirect(url_for("admin.list_users"))
+
+@bp.route("/<int:id>/remove_admin")
+@login_required
+@admin_required
+def remove_admin(id: int):
+    validate_user_id(id)
+    if id == g.user.id:
+        flash("You can't demote yourself!")
+        return redirect(url_for("admin.list_users"))
+    user = db.session.get(User, id)
+    user.userTypeId = user.userTypeId & ~ClearanceEnum.Admin
+    db.session.commit()
+    return redirect(url_for("admin.list_users"))
+
+@bp.route("/<int:id>/remove_cfo")
+@login_required
+@admin_required
+def remove_cfo(id: int):
+    validate_user_id(id)
+    user = db.session.get(User, id)
+    user.userTypeId = user.userTypeId & ~ClearanceEnum.CFO
+    db.session.commit()
+    return redirect(url_for("admin.list_users"))
+
+@bp.route("/<int:id>/delete_user")
+@login_required
+@admin_required
+def delete_user(id: int):
+    validate_user_id(id)
+    if id == g.user.id:
+        flash("You can't delete yourself!")
+        return redirect(url_for("admin.list_users"))
+
+    user = db.session.get(User, id)
+    db.session.execute(
+        db.update(Receipt)
+        .where(Receipt.userId == user.id)
+        .values(userId=0)
+    )
+    db.session.delete(user)
+    db.session.commit()
+    return redirect(url_for("admin.list_users"))
+
+def validate_user_id(id: int):
+    is_protected_user = id < 1
+    if is_protected_user:
+        return abort(403)

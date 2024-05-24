@@ -30,6 +30,9 @@ def init_db(app, db):
                     )
                 )
             db.session.add(
+                User(id=0, email="DELETED", name="DELETED", password='a')
+            )
+            db.session.add(
                 User(
                     email=app.config["RECEIPTS_ADMIN_USER_EMAIL"],
                     name=app.config["RECEIPTS_ADMIN_USER_NAME"],
