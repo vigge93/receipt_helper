@@ -1,5 +1,5 @@
 import functools
-from datetime import datetime
+from datetime import datetime, UTC
 
 from flask import (
     Blueprint,
@@ -66,7 +66,7 @@ def login():
         if g.user is not None:
             return redirect(url_for("index"))
         return render_template("auth/login.html", form=form)
-    email = form.email.data
+    email = form.email.data.lower()
     password = form.password.data
     error = None
     user: User | None = (
@@ -84,7 +84,7 @@ def login():
 
     session.clear()
     session["user_id"] = user.id
-    user.lastLogin = datetime.utcnow()
+    user.lastLogin = datetime.now(UTC)
     db.session.commit()
     session.permanent = True
     return redirect(url_for("index"))
