@@ -5,7 +5,9 @@ from shutil import make_archive, move
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
+    flash,
     redirect,
     render_template,
     request,
@@ -13,8 +15,9 @@ from flask import (
     url_for,
 )
 
-from receipt_helper import db
+from receipt_helper import database
 from receipt_helper.auth import cfo_required, login_required
+from receipt_helper.database import change_receipt_status, get_all_receipts, get_receipt
 from receipt_helper.enums import ReceiptStatusEnum
 from receipt_helper.forms.receipt_forms import RejectReceiptForm
 from receipt_helper.hooks import (
@@ -39,16 +42,7 @@ def index():
 @login_required
 @cfo_required
 def view_receipts():
-    receipts = (
-        db.session.execute(
-            db.select(Receipt)
-            .filter_by(archived=False)
-            .order_by(Receipt.statusId, Receipt.submit_date, Receipt.receipt_date)
-        )
-        .scalars()
-        .all()
-    )
-
+    receipts = get_all_receipts()
     return render_template("cfo/view_receipts.html", receipts=receipts)
 
 
@@ -56,15 +50,7 @@ def view_receipts():
 @login_required
 @cfo_required
 def view_archived_receipts():
-    receipts = (
-        db.session.execute(
-            db.select(Receipt)
-            .filter_by(archived=True)
-            .order_by(Receipt.statusId, Receipt.submit_date, Receipt.receipt_date)
-        )
-        .scalars()
-        .all()
-    )
+    receipts = get_all_receipts(archived=True)
 
     return render_template("cfo/view_archive.html", receipts=receipts)
 
@@ -74,23 +60,22 @@ def view_archived_receipts():
 @cfo_required
 def get_receipts():
     file = tempfile.NamedTemporaryFile("w+b", suffix=".zip")
-    print(current_app.config["RECEIPTS_STORAGE_PATH"])
     make_archive(
         file.name.removesuffix(".zip"),
         "zip",
         current_app.config["RECEIPTS_STORAGE_PATH"]
     )
     file.seek(0)
-    return send_file(file, download_name="kvitton.zip")
+    return send_file(file, download_name="kvitton.zip") # type: ignore
 
 
 @bp.route("/<int:id>/archive")
 @login_required
 @cfo_required
 def archive_receipt(id: int):
-    receipt = db.session.get(Receipt, id)
-    receipt.archived = True
-    db.session.commit()
+    if not database.archive_receipt(id):
+        flash("Kvitto hittades ej!")
+        return redirect(url_for("cfo.view_receipts"))
     return redirect(url_for("cfo.view_receipts"))
 
 
@@ -98,15 +83,20 @@ def archive_receipt(id: int):
 @login_required
 @cfo_required
 def approve_receipt(id: int):
-    receipt = db.session.get(Receipt, id)
+    receipt = get_receipt(id)
 
-    pre_approve_hook(receipt)
+    if not receipt:
+        flash("Kvitto hittades ej!")
+        return redirect(url_for("cfo.view_receipts"))
 
-    receipt.statusId = ReceiptStatusEnum.Handled.value
+    if not pre_approve_hook(receipt):
+        return redirect(url_for("cfo.view_receipts"))
+
+    if not change_receipt_status(id, ReceiptStatusEnum.Handled):
+        flash("Kvitto hittades ej!")
+        return redirect(url_for("cfo.view_receipts"))
 
     move_file(receipt.file, "approved", receipt.submit_date.date())
-
-    db.session.commit()
 
     post_approve_hook(receipt)
     return redirect(url_for("cfo.view_receipts"))
@@ -122,15 +112,21 @@ def reject_receipt(id: int):
 
     reason = form.reason.data
 
-    receipt = db.session.get(Receipt, id)
+    receipt = get_receipt(id)
 
-    pre_reject_hook(receipt)
-    receipt.statusId = ReceiptStatusEnum.Rejected.value
-    receipt.statusComment = reason
+    if not receipt:
+        flash("Kvitto hittades ej!")
+        return redirect(url_for("cfo.view_receipts"))
+
+    if not pre_reject_hook(receipt):
+        return redirect(url_for("cfo.view_receipts"))
+    
+    if not change_receipt_status(id, ReceiptStatusEnum.Rejected, reason):
+        flash("Kvitto hittades ej!")
+        return redirect(url_for("cfo.view_receipts"))
 
     move_file(receipt.file, "rejected", receipt.submit_date.date())
 
-    db.session.commit()
     post_reject_hook(receipt)
 
     return redirect(url_for("cfo.view_receipts"))
@@ -140,13 +136,14 @@ def reject_receipt(id: int):
 @login_required
 @cfo_required
 def move_receipt_to_submitted(id: int):
-    receipt = db.session.get(Receipt, id)
+    receipt = get_receipt(id)
 
-    receipt.statusId = ReceiptStatusEnum.Pending.value
+    if not receipt or not change_receipt_status(id, ReceiptStatusEnum.Pending):
+        flash("Kvitto hittades ej!")
+        return redirect(url_for("cfo.view_receipts"))
 
     move_file(receipt.file, "submitted", receipt.submit_date.date())
 
-    db.session.commit()
     return redirect(url_for("cfo.view_receipts"))
 
 
