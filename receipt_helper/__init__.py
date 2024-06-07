@@ -55,8 +55,8 @@ def create_app() -> Flask:
 
     db.init_app(app)
     
-    from . import data
-    data.init_db(app, db)
+    from . import init_data
+    init_data.init_db(app, db)
 
     from . import auth
 
