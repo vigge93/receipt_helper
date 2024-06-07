@@ -17,8 +17,9 @@ from flask import (
 from werkzeug.datastructures import MultiDict
 from werkzeug.security import generate_password_hash
 
-from receipt_helper import db
+from receipt_helper import database
 from receipt_helper.auth import admin_required, login_required
+from receipt_helper.database import add_user_role, get_user, get_users, remove_user_role, reset_user_password
 from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.user_forms import AddManyUsersForm, AddSingleUserForm
 from receipt_helper.model.receipt import Receipt
@@ -39,7 +40,7 @@ def index():
 @login_required
 @admin_required
 def list_users():
-    users = db.session.execute(db.select(User).where(User.id > 0)).scalars().all()
+    users = get_users()
     return render_template("admin/list_users.html", users=users)
 
 
@@ -56,12 +57,10 @@ def add_single_user():
 
     add_user(name, email)
 
-    db.session.commit()
-
     return redirect(url_for("admin.index"))
 
 
-def add_user(name: str, email: str):
+def add_user(name: str, email: str) -> bool:
     temp_password = str(uuid4())
 
     user = User(
@@ -69,9 +68,11 @@ def add_user(name: str, email: str):
         name=name,
         password=generate_password_hash(temp_password),
         userTypeId=ClearanceEnum.User.value,
-    )
+    ) # type: ignore
 
-    db.session.add(user)
+    if not database.add_user(user):
+        flash(f"Fel vid skapandet av konto för {name}!")
+        return False
 
     try:
         send_email(
@@ -117,10 +118,8 @@ def add_many_users():
                 continue
             name = user_form.name.data
             email = user_form.email.data
-            add_user(name, email)
-            added_users += 1
-    if added_users > 0:
-        db.session.commit()
+            if add_user(name, email):
+                added_users += 1
     flash(f"Lade till {added_users} användare!")
     return redirect(url_for("admin.index"))
 
@@ -129,11 +128,15 @@ def add_many_users():
 @admin_required
 def reset_password(id: int):
     validate_user_id(id)
-    user = db.session.get(User, id)
-    email = user.email
+    user = get_user(id)
 
     temp_password = str(uuid4())
 
+    if not user or not reset_user_password(id, generate_password_hash(temp_password)):
+        flash("Användare hittades inte!")
+        return redirect(url_for('admin.list_users'))
+    
+    email = user.email
 
     try:
         send_email(
@@ -159,9 +162,9 @@ Ovanstående lösenord är temporärt och vid första inloggning kommer du behö
 @admin_required
 def make_admin(id: int):
     validate_user_id(id)
-    user = db.session.get(User, id)
-    user.userTypeId = user.userTypeId | ClearanceEnum.Admin
-    db.session.commit()
+    if not add_user_role(id, ClearanceEnum.Admin):
+        flash("Användare hittades inte!")
+        return redirect(url_for('admin.list_users'))
     return redirect(url_for("admin.list_users"))
 
 @bp.route("/<int:id>/make_cfo")
@@ -169,9 +172,9 @@ def make_admin(id: int):
 @admin_required
 def make_cfo(id: int):
     validate_user_id(id)
-    user = db.session.get(User, id)
-    user.userTypeId = user.userTypeId | ClearanceEnum.CFO
-    db.session.commit()
+    if not add_user_role(id, ClearanceEnum.CFO):
+        flash("Användare hittades inte!")
+        return redirect(url_for('admin.list_users'))
     return redirect(url_for("admin.list_users"))
 
 @bp.route("/<int:id>/remove_admin")
@@ -180,11 +183,11 @@ def make_cfo(id: int):
 def remove_admin(id: int):
     validate_user_id(id)
     if id == g.user.id:
-        flash("You can't demote yourself!")
+        flash("Du kan inte plocka bort admin från dig själv!")
         return redirect(url_for("admin.list_users"))
-    user = db.session.get(User, id)
-    user.userTypeId = user.userTypeId & ~ClearanceEnum.Admin
-    db.session.commit()
+    if not remove_user_role(id, ClearanceEnum.Admin):
+        flash("Användare hittades inte!")
+        return redirect(url_for('admin.list_users'))
     return redirect(url_for("admin.list_users"))
 
 @bp.route("/<int:id>/remove_cfo")
@@ -192,9 +195,9 @@ def remove_admin(id: int):
 @admin_required
 def remove_cfo(id: int):
     validate_user_id(id)
-    user = db.session.get(User, id)
-    user.userTypeId = user.userTypeId & ~ClearanceEnum.CFO
-    db.session.commit()
+    if not remove_user_role(id, ClearanceEnum.CFO):
+        flash("Användare hittades inte!")
+        return redirect(url_for('admin.list_users'))
     return redirect(url_for("admin.list_users"))
 
 @bp.route("/<int:id>/delete_user")
@@ -203,17 +206,12 @@ def remove_cfo(id: int):
 def delete_user(id: int):
     validate_user_id(id)
     if id == g.user.id:
-        flash("You can't delete yourself!")
+        flash("Du kan inte radera dig själv!")
         return redirect(url_for("admin.list_users"))
 
-    user = db.session.get(User, id)
-    db.session.execute(
-        db.update(Receipt)
-        .where(Receipt.userId == user.id)
-        .values(userId=0)
-    )
-    db.session.delete(user)
-    db.session.commit()
+    if not database.delete_user(id):
+        flash("Användare hittades inte!")
+        return redirect(url_for('admin.list_users'))
     return redirect(url_for("admin.list_users"))
 
 def validate_user_id(id: int):
