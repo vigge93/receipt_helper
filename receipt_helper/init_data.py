@@ -13,7 +13,9 @@ def init_db(app, db):
     try:
         with app.app_context():
             db.create_all()
-            clearances = combinations_with_replacement(ClearanceEnum, len(ClearanceEnum))
+            clearances = combinations_with_replacement(
+                ClearanceEnum, len(ClearanceEnum)
+            )
             clearances = [
                 reduce(lambda curr, next: curr | next, clearance)
                 for clearance in clearances
@@ -29,18 +31,18 @@ def init_db(app, db):
                         displayColor=STATUS_COLOR_MAP[status],
                     )
                 )
-            db.session.add(
-                User(id=0, email="DELETED", name="DELETED", password='a')
-            )
+            db.session.add(User(id=0, email="DELETED", name="DELETED", password="a"))
             db.session.add(
                 User(
                     email=app.config["RECEIPTS_ADMIN_USER_EMAIL"],
                     name=app.config["RECEIPTS_ADMIN_USER_NAME"],
-                    password=generate_password_hash(app.config["RECEIPTS_ADMIN_USER_PASSWORD"]),
-                    userTypeId=(ClearanceEnum.User|ClearanceEnum.Admin)
+                    password=generate_password_hash(
+                        app.config["RECEIPTS_ADMIN_USER_PASSWORD"]
+                    ),
+                    userTypeId=(ClearanceEnum.User | ClearanceEnum.Admin),
                 )
             )
             db.session.commit()
-            
+
     except Exception as ex:
         print(ex)

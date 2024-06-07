@@ -1,5 +1,4 @@
 import functools
-from datetime import datetime, UTC
 
 from flask import (
     Blueprint,
@@ -14,7 +13,12 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from receipt_helper.database import get_user, get_user_by_email, update_user_last_login, update_user_password
+from receipt_helper.database import (
+    get_user,
+    get_user_by_email,
+    update_user_last_login,
+    update_user_password,
+)
 from receipt_helper.enums import ClearanceEnum, ReceiptStatusEnum
 from receipt_helper.forms.auth_forms import ChangePasswordForm, LoginForm
 from receipt_helper.model.user import User
@@ -31,11 +35,14 @@ def login_required(view):
     def wrapped_view(**kwargs):
         if g.user is None:
             return redirect(url_for("auth.login"))
-        if g.user.needs_password_change and request.path != url_for("auth.change_password"):
+        if g.user.needs_password_change and request.path != url_for(
+            "auth.change_password"
+        ):
             return redirect(url_for("auth.change_password"))
         return view(**kwargs)
 
     return wrapped_view
+
 
 def admin_required(view):
     @functools.wraps(view)
@@ -46,6 +53,7 @@ def admin_required(view):
         return logout()
 
     return wrapped_view
+
 
 def cfo_required(view):
     @functools.wraps(view)
@@ -65,12 +73,12 @@ def login():
         if g.user is not None:
             return redirect(url_for("index"))
         return render_template("auth/login.html", form=form)
-    email = form.email.data.lower() # type: ignore
+    email = form.email.data.lower()  # type: ignore
     password = form.password.data
     error = None
     user: User | None = get_user_by_email(email)
 
-    if user is None or not check_password_hash(user.password, password): # type: ignore
+    if user is None or not check_password_hash(user.password, password):  # type: ignore
         error = "Felaktigt användarnamn eller lösenord."
 
     if error is not None:
@@ -80,8 +88,8 @@ def login():
         return render_template("auth/login.html", form=form)
 
     session.clear()
-    session["user_id"] = user.id # type: ignore
-    update_user_last_login(user.id) # type: ignore
+    session["user_id"] = user.id  # type: ignore
+    update_user_last_login(user.id)  # type: ignore
     session.permanent = True
     return redirect(url_for("index"))
 

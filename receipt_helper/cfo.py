@@ -5,7 +5,6 @@ from shutil import make_archive, move
 
 from flask import (
     Blueprint,
-    abort,
     current_app,
     flash,
     redirect,
@@ -26,7 +25,7 @@ from receipt_helper.hooks import (
     pre_approve_hook,
     pre_reject_hook,
 )
-from receipt_helper.model.receipt import File, Receipt
+from receipt_helper.model.receipt import File
 
 bp = Blueprint("cfo", __name__, url_prefix="/cfo")
 
@@ -63,10 +62,10 @@ def get_receipts():
     make_archive(
         file.name.removesuffix(".zip"),
         "zip",
-        current_app.config["RECEIPTS_STORAGE_PATH"]
+        current_app.config["RECEIPTS_STORAGE_PATH"],
     )
     file.seek(0)
-    return send_file(file, download_name="kvitton.zip") # type: ignore
+    return send_file(file, download_name="kvitton.zip")  # type: ignore
 
 
 @bp.route("/<int:id>/archive")
@@ -120,7 +119,7 @@ def reject_receipt(id: int):
 
     if not pre_reject_hook(receipt):
         return redirect(url_for("cfo.view_receipts"))
-    
+
     if not change_receipt_status(id, ReceiptStatusEnum.Rejected, reason):
         flash("Kvitto hittades ej!")
         return redirect(url_for("cfo.view_receipts"))

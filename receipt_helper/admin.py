@@ -19,10 +19,15 @@ from werkzeug.security import generate_password_hash
 
 from receipt_helper import database
 from receipt_helper.auth import admin_required, login_required
-from receipt_helper.database import add_user_role, get_user, get_users, remove_user_role, reset_user_password
+from receipt_helper.database import (
+    add_user_role,
+    get_user,
+    get_users,
+    remove_user_role,
+    reset_user_password,
+)
 from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.user_forms import AddManyUsersForm, AddSingleUserForm
-from receipt_helper.model.receipt import Receipt
 from receipt_helper.model.user import User
 from receipt_helper.util import send_email
 
@@ -68,7 +73,7 @@ def add_user(name: str, email: str) -> bool:
         name=name,
         password=generate_password_hash(temp_password),
         userTypeId=ClearanceEnum.User.value,
-    ) # type: ignore
+    )  # type: ignore
 
     if not database.add_user(user):
         flash(f"Fel vid skapandet av konto för {name}!")
@@ -90,9 +95,12 @@ Ovanstående lösenord är temporärt och vid första inloggning kommer du behö
 """,
         )
     except smtplib.SMTPException:
-        flash(f"Fel vid skickande av email till {name}, nollställ användarens lösenord för att skicka ett nytt mejl.")
+        flash(
+            f"Fel vid skickande av email till {name}, nollställ användarens lösenord för att skicka ett nytt mejl."
+        )
         return False
     return True
+
 
 @bp.route("/add_many_users", methods=("GET", "POST"))
 @login_required
@@ -123,6 +131,7 @@ def add_many_users():
     flash(f"Lade till {added_users} användare!")
     return redirect(url_for("admin.index"))
 
+
 @bp.route("/<int:id>/reset_password")
 @login_required
 @admin_required
@@ -134,15 +143,15 @@ def reset_password(id: int):
 
     if not user or not reset_user_password(id, generate_password_hash(temp_password)):
         flash("Användare hittades inte!")
-        return redirect(url_for('admin.list_users'))
-    
+        return redirect(url_for("admin.list_users"))
+
     email = user.email
 
     try:
         send_email(
             email,
-        "Lösenord för kvittoredovisning nollställt!",
-        f"""Hej
+            "Lösenord för kvittoredovisning nollställt!",
+            f"""Hej
             
 Ditt lösenord för kvittoredovisningar har nollställts. Ditt temporära lösenord anges nedan.
 
@@ -150,12 +159,16 @@ Lösenord: {temp_password}
 Länk: {url_for('main.index', _external=True)}
 
 Ovanstående lösenord är temporärt och vid första inloggning kommer du behöva byta ditt lösenord.
-""")
+""",
+        )
         flash(f"Lösenord nollställt för {user.name}")
     except smtplib.SMTPException:
-        flash(f"Fel vid skickande av email till {user.name}, nollställ användarens lösenord för att skicka ett nytt mejl, eller kontakta en administratör.")
+        flash(
+            f"Fel vid skickande av email till {user.name}, nollställ användarens lösenord för att skicka ett nytt mejl, eller kontakta en administratör."
+        )
         return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
+
 
 @bp.route("/<int:id>/make_admin")
 @login_required
@@ -164,8 +177,9 @@ def make_admin(id: int):
     validate_user_id(id)
     if not add_user_role(id, ClearanceEnum.Admin):
         flash("Användare hittades inte!")
-        return redirect(url_for('admin.list_users'))
+        return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
+
 
 @bp.route("/<int:id>/make_cfo")
 @login_required
@@ -174,8 +188,9 @@ def make_cfo(id: int):
     validate_user_id(id)
     if not add_user_role(id, ClearanceEnum.CFO):
         flash("Användare hittades inte!")
-        return redirect(url_for('admin.list_users'))
+        return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
+
 
 @bp.route("/<int:id>/remove_admin")
 @login_required
@@ -187,8 +202,9 @@ def remove_admin(id: int):
         return redirect(url_for("admin.list_users"))
     if not remove_user_role(id, ClearanceEnum.Admin):
         flash("Användare hittades inte!")
-        return redirect(url_for('admin.list_users'))
+        return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
+
 
 @bp.route("/<int:id>/remove_cfo")
 @login_required
@@ -197,8 +213,9 @@ def remove_cfo(id: int):
     validate_user_id(id)
     if not remove_user_role(id, ClearanceEnum.CFO):
         flash("Användare hittades inte!")
-        return redirect(url_for('admin.list_users'))
+        return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
+
 
 @bp.route("/<int:id>/delete_user")
 @login_required
@@ -211,8 +228,9 @@ def delete_user(id: int):
 
     if not database.delete_user(id):
         flash("Användare hittades inte!")
-        return redirect(url_for('admin.list_users'))
+        return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
+
 
 def validate_user_id(id: int):
     is_protected_user = id < 1
