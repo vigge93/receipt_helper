@@ -28,7 +28,7 @@
                 </div>
                 <p class="m-2 align-self-center" style="text-wrap: nowrap; background: {{ receipt.status.displayColor }};" ">Status: {{receipt.status.displayName}}</p>
             </div>
-            <div class="d-flex align-items-center m-2">Summa: {{ receipt.amount/100 }}kr</div>
+            <div class="d-flex align-items-center m-2">Summa: {{ "{0:.2f}".format(receipt.amount/100) }}kr</div>
             {% if receipt.statusComment %}
             <h3>Statuskommentar</h3>
             <div class="m-2">
