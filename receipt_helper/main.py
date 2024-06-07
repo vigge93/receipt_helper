@@ -17,11 +17,11 @@ from werkzeug.utils import secure_filename
 
 from receipt_helper import database
 from receipt_helper.auth import login_required
+from receipt_helper.database import get_receipt, get_user_receipts, insert_receipt
 from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.receipt_forms import SubmitReceiptForm
 from receipt_helper.hooks import post_submit_hook, pre_submit_hook
 from receipt_helper.model.receipt import File, Receipt
-from receipt_helper.database import get_receipt, get_user_receipts, insert_receipt
 
 bp = Blueprint("main", __name__, url_prefix="/")
 
@@ -30,7 +30,7 @@ bp = Blueprint("main", __name__, url_prefix="/")
 @login_required
 def index():
     receipts = get_user_receipts(g.user.id)
-    
+
     return render_template("main/index.html", receipts=receipts)
 
 
@@ -72,7 +72,7 @@ def add_receipt():
     file.save(filename)
 
     path, filename = os.path.split(filename)
-    receipt_file = File(filename=filename, path=path) # type: ignore
+    receipt_file = File(filename=filename, path=path)  # type: ignore
     receipt = Receipt(
         userId=g.user.id,
         receipt_date=receipt_date,
@@ -80,7 +80,7 @@ def add_receipt():
         activity=activity,
         amount=amount,
         file=receipt_file,
-    ) # type: ignore
+    )  # type: ignore
 
     insert_receipt(receipt)
     if not post_submit_hook(receipt):
@@ -92,10 +92,7 @@ def uniquify(path: str):
     filename, extension = os.path.splitext(path)
     counter = 1
 
-    while (
-        os.path.exists(path)
-        or database.get_file(os.path.split(path)[1])
-    ):
+    while os.path.exists(path) or database.get_file(os.path.split(path)[1]):
         path = f"{filename}_{counter}{extension}"
         counter += 1
 
@@ -132,4 +129,3 @@ def get_receipt_document(id: int):
         abort(404, "Kvitto hittades ej!")
 
     return send_from_directory(receipt.file.path, receipt.file.filename)
-

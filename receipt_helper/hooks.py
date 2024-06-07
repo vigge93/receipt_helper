@@ -1,4 +1,5 @@
 from smtplib import SMTPException
+
 from flask import current_app, flash, url_for
 
 from receipt_helper.forms.receipt_forms import SubmitReceiptForm
