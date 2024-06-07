@@ -31,7 +31,7 @@ def login_required(view):
     def wrapped_view(**kwargs):
         if g.user is None:
             return redirect(url_for("auth.login"))
-        if g.user.needs_password_change:
+        if g.user.needs_password_change and request.path != url_for("auth.change_password"):
             return redirect(url_for("auth.change_password"))
         return view(**kwargs)
 
@@ -87,6 +87,7 @@ def login():
 
 
 @bp.route("/change_password", methods=("GET", "POST"))
+@login_required
 def change_password():
     form = ChangePasswordForm()
     if request.method != "POST" or not form.validate_on_submit():
