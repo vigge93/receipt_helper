@@ -1,5 +1,6 @@
 import csv
 import os
+import smtplib
 from uuid import uuid4
 
 from flask import (
@@ -72,11 +73,12 @@ def add_user(name: str, email: str):
 
     db.session.add(user)
 
-    send_email(
-        email,
-        "Konto för kvittoredovisning skapat!",
-        f"""Hej
-               
+    try:
+        send_email(
+            email,
+            "Konto för kvittoredovisning skapat!",
+            f"""Hej
+
 Det har skapats ett konto åt dig för att kunna hantera kvittoredovisningar. Inloggningsuppgifter står nedan.
 
 Länk: {url_for('main.index', _external=True)}
@@ -85,8 +87,11 @@ Lösenord: {temp_password}
 
 Ovanstående lösenord är temporärt och vid första inloggning kommer du behöva byta ditt lösenord.
 """,
-    )
-
+        )
+    except smtplib.SMTPException:
+        flash(f"Fel vid skickande av email till {name}, nollställ användarens lösenord för att skicka ett nytt mejl.")
+        return False
+    return True
 
 @bp.route("/add_many_users", methods=("GET", "POST"))
 @login_required
@@ -129,15 +134,13 @@ def reset_password(id: int):
 
     temp_password = str(uuid4())
 
-    user.password = generate_password_hash(temp_password)
-    user.needs_password_change = True
-    db.session.commit()
 
-    send_email(
-        email,
+    try:
+        send_email(
+            email,
         "Lösenord för kvittoredovisning nollställt!",
         f"""Hej
-               
+            
 Ditt lösenord för kvittoredovisningar har nollställts. Ditt temporära lösenord anges nedan.
 
 Lösenord: {temp_password}
@@ -145,7 +148,10 @@ Länk: {url_for('main.index', _external=True)}
 
 Ovanstående lösenord är temporärt och vid första inloggning kommer du behöva byta ditt lösenord.
 """)
-    flash(f"Lösenord nollställt för {user.name}")
+        flash(f"Lösenord nollställt för {user.name}")
+    except smtplib.SMTPException:
+        flash(f"Fel vid skickande av email till {user.name}, nollställ användarens lösenord för att skicka ett nytt mejl, eller kontakta en administratör.")
+        return redirect(url_for("admin.list_users"))
     return redirect(url_for("admin.list_users"))
 
 @bp.route("/<int:id>/make_admin")
