@@ -1,17 +1,33 @@
+import logging
 import os
 
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
-from flask_talisman import Talisman
 from werkzeug.exceptions import HTTPException
+from flask_sqlalchemy import SQLAlchemy
 
 from receipt_helper.model.model import BaseModel
 
-# from flask_cors import CORS
+from logging.config import dictConfig
+from logging.handlers import SMTPHandler
 
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 db = SQLAlchemy(engine_options={"pool_pre_ping": True}, model_class=BaseModel)
-
 
 def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
@@ -66,30 +82,24 @@ def create_app() -> Flask:
     def healthz() -> dict[str, int]:
         return {"status": 1}
 
-    # csp = {
-    #     "default-src": [
-    #         "'self'",
-    #         "*.icons8.com",
-    #         "*.fontawesome.com",
-    #         "'unsafe-inline'",
-    #         "*.googleapis.com",
-    #         "*.blob.core.windows.net",
-    #         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css",
-    #         "data:",
-    #     ],
-    #     "script-src": [
-    #         "code.jquery.com",
-    #         "'unsafe-inline'",
-    #         "'self'",
-    #         "cdn.jsdelivr.net",
-    #         "unpkg.com",
-    #         "cdnjs.cloudflare.com",
-    #     ],
-    #     "worker-src": ["'self'", "blob:"],
-    #     "font-src": ["'self'", "*.fontawesome.com"],
-    # }
-    # Talisman(app, content_security_policy=csp)
-    # CORS(app)
+    if not app.config["TESTING"]:  # pragma: no cover
+        mail_handler = SMTPHandler(
+            mailhost=app.config["RECEIPTS_SMTP_HOST"],
+            fromaddr=app.config["RECEIPTS_EMAIL_SENDER"],
+            toaddrs=app.config["RECEIPTS_ADMIN_USER_EMAIL"],
+            subject='Receipt helper: Application Error',
+            credentials=(app.config["RECEIPTS_SMTP_USERNAME"], app.config["RECEIPTS_SMTP_PASSWORD"])
+        )
+        mail_handler.setLevel(logging.ERROR)
+        mail_handler.setFormatter(logging.Formatter(
+            '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+        ))
+
+        app.logger.addHandler(mail_handler)
+        app.logger.setLevel(int(os.getenv("LOGGING_LEVEL", logging.INFO)))
+
+
+        app.logger.info(f"Web app started!\t{__name__}")
     return app
 
 
