@@ -2,6 +2,8 @@ from smtplib import SMTPException
 
 from flask import current_app, flash, url_for
 
+from receipt_helper.database import get_users
+from receipt_helper.enums import ClearanceEnum
 from receipt_helper.forms.receipt_forms import SubmitReceiptForm
 from receipt_helper.model.receipt import Receipt
 from receipt_helper.util import send_email
@@ -14,9 +16,12 @@ def pre_submit_hook(form: SubmitReceiptForm):
 
 def post_submit_hook(receipt: Receipt):
     """Called after receipt has been committed to database."""
+    
+    users = get_users()
+    cfo_emails = [user.email for user in users if (user.userTypeId & ClearanceEnum.CFO) != 0]
     try:
         send_email(
-            current_app.config["RECEIPTS_EMAIL_RECEIPT_RECIPIENT"],
+            cfo_emails,
             "Ny kvittoredovisning",
             f"""Hej,
 

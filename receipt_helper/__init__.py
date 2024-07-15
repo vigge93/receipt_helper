@@ -20,7 +20,6 @@ def create_app() -> Flask:
         RECEIPTS_STORAGE_PATH=os.getenv(
             "RECEIPTS_STORAGE_PATH", os.path.join(app.instance_path, "receipts")
         ),
-        RECEIPTS_EMAIL_RECEIPT_RECIPIENT=os.getenv("RECEIPTS_EMAIL_RECEIPT_RECIPIENT"),
         RECEIPTS_EMAIL_SENDER=os.getenv("RECEIPTS_EMAIL_SENDER"),
         RECEIPTS_SMTP_HOST=os.getenv("RECEIPTS_SMTP_HOST"),
         RECEIPTS_SMTP_USERNAME=os.getenv("RECEIPTS_SMTP_USERNAME"),
