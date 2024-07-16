@@ -19,20 +19,22 @@ def post_submit_hook(receipt: Receipt):
     
     users = get_users()
     cfo_emails = [user.email for user in users if (user.userTypeId & ClearanceEnum.CFO) != 0]
-    try:
-        send_email(
-            cfo_emails,
-            "Ny kvittoredovisning",
-            f"""Hej,
+    
+    if cfo_emails:
+        try:
+            send_email(
+                cfo_emails,
+                "Ny kvittoredovisning",
+                f"""Hej,
 
-    Det har inkommit en ny kvittoredovisning från {receipt.user.name}:
+Det har inkommit en ny kvittoredovisning från {receipt.user.name}:
 
-    {url_for('main.view_receipt', id=receipt.id, _external=True)}
+{url_for('main.view_receipt', id=receipt.id, _external=True)}
 
-    """,
-        )
-    except SMTPException:
-        return False
+""",
+            )
+        except SMTPException:
+            return False
     return True
 
 
