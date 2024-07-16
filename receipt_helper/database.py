@@ -109,6 +109,15 @@ def add_user(user: User) -> bool:
         db.session.rollback()
         return False
 
+def update_user(id: int, name: str, email: str) -> bool:
+    user = db.session.get(User, id)
+    if not user:
+        return False
+    user.name = name
+    user.email = email
+    db.session.commit()
+    return True
+
 
 def reset_user_password(id: int, hashed_temp_password: str) -> bool:
     user = db.session.get(User, id)

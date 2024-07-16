@@ -27,7 +27,7 @@ from receipt_helper.database import (
     reset_user_password,
 )
 from receipt_helper.enums import ClearanceEnum
-from receipt_helper.forms.user_forms import AddManyUsersForm, AddSingleUserForm
+from receipt_helper.forms.user_forms import AddManyUsersForm, AddSingleUserForm, UpdateUserForm
 from receipt_helper.model.user import User
 from receipt_helper.util import send_email
 
@@ -131,6 +131,27 @@ def add_many_users():
     flash(f"Lade till {added_users} användare!")
     return redirect(url_for("admin.index"))
 
+@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@login_required
+@admin_required
+def update_user(id: int):
+    user = get_user(id)
+    if not user:
+        flash("Användare hittades inte!")
+        return redirect(url_for("admin.list_users"))
+    
+    form = UpdateUserForm(data=user.as_dict())
+    if request.method != "POST" or not form.validate_on_submit():
+        return render_template("admin/update_user.html", form=form)
+
+    name = form.name.data
+    email = form.email.data
+
+    if not database.update_user(id, name, email):
+        flash("Användare hittades inte!")
+        return redirect(url_for("admin.list_users"))
+
+    return redirect(url_for('admin.list_users'))
 
 @bp.route("/<int:id>/reset_password")
 @login_required

@@ -11,7 +11,10 @@
                 <div class="d-flex w-100">
                     <div class="d-flex flex-column flex-grow-1 m-2">
                         <div class="d-flex my-2 justify-content-between">
-                            <p>{{user.name}}</p>
+                            <div>
+                                <p>{{user.name}}</p>
+                                <a class="btn btn-primary px-2 py-0" href="{{ url_for('admin.update_user', id=user.id) }}">Ändra användare</a>
+                            </div>
                             <small>{{ user.email }}</small>
                             <small>Senast inloggad: {{ user.lastLogin.strftime("%Y-%m-%d %H:%M") if user.lastLogin else "Aldrig" }}</small>
                             <small>Användartyp: {{ user.userType.name }}</small>
