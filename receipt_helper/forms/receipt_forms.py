@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileRequired
-from wtforms import DateField, DecimalField, StringField, validators
+from wtforms import DateField, DecimalField, SelectField, StringField, validators
 
 
 class SubmitReceiptForm(FlaskForm):
@@ -22,9 +22,10 @@ class SubmitReceiptForm(FlaskForm):
             FileAllowed(
                 ["png", "jpeg", "jpg", "gif", "tiff", "raw", "svg", "webp", "pdf"],
                 "Endast bild/pdf är tilåtet!",
-            ),
+            )
         ],
     )
+    user = SelectField("Användare", coerce=int)
 
 
 class RejectReceiptForm(FlaskForm):
