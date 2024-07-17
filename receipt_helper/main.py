@@ -38,6 +38,11 @@ def index():
 @login_required
 def add_receipt():
     form = SubmitReceiptForm()
+    users = database.get_users()
+    users = [(user.id, user.name) for user in users]
+    form.user.choices = users
+    form.user.data = g.user.id
+
     if request.method != "POST" or not form.validate_on_submit():
         return render_template("main/submit.html", form=form)
 
