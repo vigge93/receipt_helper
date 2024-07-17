@@ -41,9 +41,9 @@ def add_receipt():
     users = database.get_users()
     users = [(user.id, user.name) for user in users]
     form.user.choices = users
-    form.user.data = g.user.id
 
     if request.method != "POST" or not form.validate_on_submit():
+        form.user.data = g.user.id
         return render_template("main/submit.html", form=form)
 
     if not pre_submit_hook(form):
@@ -56,6 +56,10 @@ def add_receipt():
     submit_date = datetime.date.today()
     submit_date_str = submit_date.isoformat()
     file = form.file.data
+    user_id = form.user.data
+
+    if user_id != g.user.id and (g.user.userTypeId & ClearanceEnum.CFO) == 0:
+        abort(403)
 
     os.makedirs(
         os.path.join(
@@ -79,7 +83,7 @@ def add_receipt():
     path, filename = os.path.split(filename)
     receipt_file = File(filename=filename, path=path)  # type: ignore
     receipt = Receipt(
-        userId=g.user.id,
+        userId=user_id,
         receipt_date=receipt_date,
         submit_date=submit_date,
         activity=activity,
