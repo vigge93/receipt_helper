@@ -12,7 +12,8 @@ def send_email(recipients: str | Sequence[str], subject: str, body: str):
     msg["From"] = current_app.config["RECEIPTS_EMAIL_SENDER"]
 
     try:
-        with smtplib.SMTP_SSL(current_app.config["RECEIPTS_SMTP_HOST"]) as s:
+        with smtplib.SMTP(current_app.config["RECEIPTS_SMTP_HOST"], port=current_app.config["RECEIPTS_SMTP_PORT"]) as s:
+            s.starttls()
             s.login(
                 current_app.config["RECEIPTS_SMTP_USERNAME"],
                 current_app.config["RECEIPTS_SMTP_PASSWORD"],
