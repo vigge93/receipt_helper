@@ -61,6 +61,8 @@ def add_receipt():
     if user_id != g.user.id and (g.user.userTypeId & ClearanceEnum.CFO) == 0:
         abort(403)
 
+    user = database.get_user(user_id)
+    
     os.makedirs(
         os.path.join(
             current_app.config["RECEIPTS_STORAGE_PATH"], "submitted", submit_date_str
@@ -69,7 +71,7 @@ def add_receipt():
     )
 
     filename = secure_filename(
-        f"{submit_date_str}_{g.user.name}{os.path.splitext(file.filename)[-1]}"
+        f"{submit_date_str}_{user.name}{os.path.splitext(file.filename)[-1]}"
     )
     filename = os.path.join(
         current_app.config["RECEIPTS_STORAGE_PATH"],
