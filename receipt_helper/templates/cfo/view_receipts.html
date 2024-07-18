@@ -15,7 +15,7 @@
                             <small>Inskickat av: {{receipt.user.name}}</small>
                             <small>Kvittodatum: {{receipt.receipt_date.strftime('%Y-%m-%d')}}</small>
                             <small>Inskickat: {{receipt.submit_date.strftime('%Y-%m-%d')}}</small>
-                            <small>{{receipt.amount/100}}kr</small>
+                            <small>{{"{0:.2f}".format(receipt.amount/100)}}kr</small>
                             <small style="background: {{ receipt.status.displayColor }};">Status: {{receipt.status.displayName}}</small>
                         </div>
                         <b>Flytta till:</b>
