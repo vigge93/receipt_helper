@@ -122,7 +122,11 @@ def update_user(id: int, name: str, email: str) -> bool:
         return False
     user.name = name
     user.email = email
-    db.session.commit()
+    try:
+        db.session.commit()
+    except exc.IntegrityError:
+        db.session.rollback()
+        return False
     return True
 
 

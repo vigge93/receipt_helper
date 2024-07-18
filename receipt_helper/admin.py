@@ -148,7 +148,7 @@ def update_user(id: int):
     email = form.email.data
 
     if not database.update_user(id, name, email):
-        flash("Användare hittades inte!")
+        flash("Något gick fel!")
         return redirect(url_for("admin.list_users"))
 
     return redirect(url_for('admin.list_users'))
