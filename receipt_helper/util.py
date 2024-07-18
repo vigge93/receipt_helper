@@ -10,6 +10,10 @@ def send_email(recipients: str | Sequence[str], subject: str, body: str):
     msg.set_content(body)
     msg["Subject"] = subject
     msg["From"] = current_app.config["RECEIPTS_EMAIL_SENDER"]
+    if isinstance(recipients, str):
+        msg["To"] = recipients
+    else:
+        msg["To"] = ",".join(recipients)
 
     try:
         with smtplib.SMTP(
