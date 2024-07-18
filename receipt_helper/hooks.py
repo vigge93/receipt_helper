@@ -16,10 +16,12 @@ def pre_submit_hook(form: SubmitReceiptForm):
 
 def post_submit_hook(receipt: Receipt):
     """Called after receipt has been committed to database."""
-    
+
     users = get_users()
-    cfo_emails = [user.email for user in users if (user.userTypeId & ClearanceEnum.CFO) != 0]
-    
+    cfo_emails = [
+        user.email for user in users if (user.userTypeId & ClearanceEnum.CFO) != 0
+    ]
+
     if cfo_emails:
         try:
             send_email(

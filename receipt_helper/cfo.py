@@ -160,5 +160,5 @@ def move_file(file: File, dest: str, date: datetime.date):
 
     move(os.path.join(file.path, filename), dest_path)
     file.path = path
-    
+
     database.commit()

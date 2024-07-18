@@ -12,6 +12,7 @@ from receipt_helper.model.user import User
 def commit():
     db.session.commit()
 
+
 def rollback():
     db.session.rollback()
 
@@ -115,6 +116,7 @@ def add_user(user: User) -> bool:
     except exc.SQLAlchemyError:
         db.session.rollback()
         return False
+
 
 def update_user(id: int, name: str, email: str) -> bool:
     user = db.session.get(User, id)

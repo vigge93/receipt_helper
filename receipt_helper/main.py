@@ -62,7 +62,7 @@ def add_receipt():
         abort(403)
 
     user = database.get_user(user_id)
-    
+
     os.makedirs(
         os.path.join(
             current_app.config["RECEIPTS_STORAGE_PATH"], "submitted", submit_date_str
