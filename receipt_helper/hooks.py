@@ -59,8 +59,8 @@ def post_reject_hook(receipt: Receipt):
             "Kvittoredovisning nekad",
             f"""Hej,
 
-    En av dina kvittoredovisningar har blivit nekad. För mer detaljer, se {url_for('main.view_receipt', id=receipt.id, _external=True)}.
-    """,
+En av dina kvittoredovisningar har blivit nekad. För mer detaljer, se {url_for('main.view_receipt', id=receipt.id, _external=True)}.
+""",
         )
     except SMTPException:
         flash("Misslyckades med att skicka nekande-mejl.")
