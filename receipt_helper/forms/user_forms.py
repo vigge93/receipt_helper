@@ -20,6 +20,7 @@ class AddSingleUserForm(FlaskForm):
         ],
     )
 
+
 class UpdateUserForm(FlaskForm):
     name = StringField(
         "Namn",

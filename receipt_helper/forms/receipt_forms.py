@@ -22,7 +22,7 @@ class SubmitReceiptForm(FlaskForm):
             FileAllowed(
                 ["png", "jpeg", "jpg", "gif", "tiff", "raw", "svg", "webp", "pdf"],
                 "Endast bild/pdf är tilåtet!",
-            )
+            ),
         ],
     )
     user = SelectField("Användare", coerce=int)
