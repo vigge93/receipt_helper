@@ -9,6 +9,13 @@ from receipt_helper.model.receipt import File, Receipt
 from receipt_helper.model.user import User
 
 
+def commit():
+    db.session.commit()
+
+def rollback():
+    db.session.rollback()
+
+
 def get_user_receipts(user_id: int) -> Sequence[Receipt]:
     receipts = (
         db.session.execute(
