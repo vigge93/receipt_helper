@@ -38,8 +38,13 @@ def index():
 @login_required
 def add_receipt():
     form = SubmitReceiptForm()
-    users = database.get_users()
-    users = [(user.id, user.name) for user in users]
+    users = []
+    if (g.user.userTypeId & ClearanceEnum.CFO) == 0:
+        users = [(g.user.id, g.user.name)]
+    else:
+        users = database.get_users()
+        users = [(user.id, user.name) for user in users]
+    
     form.user.choices = users
 
     if request.method != "POST" or not form.validate_on_submit():

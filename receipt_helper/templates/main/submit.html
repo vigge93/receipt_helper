@@ -19,6 +19,8 @@
 	  <h3>Avancerade inställningar</h3>
 	  <label>Användare</label>
 	  {{ formMacros.with_errors(form.user, class='form-control', form_class='form-floating mb-3', label=True) }}
+	{% else %}
+	  {{ formMacros.with_errors(form.user, class='form-control', form_class='form-floating mb-3', label=False, hidden=True) }}
 	{% endif %}
 </form>
 {% endblock %}
