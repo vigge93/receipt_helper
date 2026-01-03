@@ -1,18 +1,25 @@
-from enum import Enum, IntFlag, auto, unique
+from enum import Enum, IntEnum, IntFlag, auto, unique
 
 
 @unique
 class ClearanceEnum(IntFlag):
-    User = auto()
-    Admin = auto()
-    CFO = auto()
+    User = 1
+    Admin = 2
+    CFO = 4
 
 
 @unique
-class ReceiptStatusEnum(Enum):
+class ReceiptStatusEnum(IntEnum):
     Pending = 10
     Handled = 80
     Rejected = 90
+
+
+@unique
+class LogTypeEnum(IntEnum):
+    User = 10
+    Admin = 20
+    CFO = 30
 
 
 STATUS_COLOR_MAP = {

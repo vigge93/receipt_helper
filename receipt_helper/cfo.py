@@ -7,6 +7,7 @@ from flask import (
     Blueprint,
     current_app,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -16,8 +17,13 @@ from flask import (
 
 from receipt_helper import database
 from receipt_helper.auth import cfo_required, login_required
-from receipt_helper.database import change_receipt_status, get_all_receipts, get_receipt
-from receipt_helper.enums import ReceiptStatusEnum
+from receipt_helper.database import (
+    change_receipt_status,
+    get_all_receipts,
+    get_receipt,
+    log_action,
+)
+from receipt_helper.enums import LogTypeEnum, ReceiptStatusEnum
 from receipt_helper.forms.receipt_forms import RejectReceiptForm
 from receipt_helper.hooks import (
     post_approve_hook,
@@ -75,6 +81,7 @@ def archive_receipt(id: int):
     if not database.archive_receipt(id):
         flash("Kvitto hittades ej!")
         return redirect(url_for("cfo.view_receipts"))
+    log_action("kvitto arkiverat", LogTypeEnum.CFO, g.user.id, receipt=id)
     return redirect(url_for("cfo.view_receipts"))
 
 
@@ -97,7 +104,10 @@ def approve_receipt(id: int):
 
     move_file(receipt.file, "approved", receipt.submit_date.date())
 
+    log_action("kvitto godkänt", LogTypeEnum.CFO, g.user.id, receipt=id)
+
     post_approve_hook(receipt)
+
     return redirect(url_for("cfo.view_receipts"))
 
 
@@ -126,6 +136,8 @@ def reject_receipt(id: int):
 
     move_file(receipt.file, "rejected", receipt.submit_date.date())
 
+    log_action("kvitto nekat", LogTypeEnum.CFO, g.user.id, receipt=id)
+
     post_reject_hook(receipt)
 
     return redirect(url_for("cfo.view_receipts"))
@@ -142,6 +154,7 @@ def move_receipt_to_submitted(id: int):
         return redirect(url_for("cfo.view_receipts"))
 
     move_file(receipt.file, "submitted", receipt.submit_date.date())
+    log_action("kvitto pågående", LogTypeEnum.CFO, g.user.id, receipt=id)
 
     return redirect(url_for("cfo.view_receipts"))
 

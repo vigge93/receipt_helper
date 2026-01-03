@@ -19,3 +19,7 @@ class User(db.Model):
     lastLogin: Mapped[datetime | None]
 
     userType: Mapped["UserType"] = relationship()
+    logs: Mapped[list["Log"]] = relationship(
+        cascade="all",
+        foreign_keys="Log.userId",
+    )

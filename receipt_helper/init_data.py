@@ -3,7 +3,13 @@ from itertools import combinations_with_replacement
 
 from werkzeug.security import generate_password_hash
 
-from receipt_helper.enums import STATUS_COLOR_MAP, ClearanceEnum, ReceiptStatusEnum
+from receipt_helper.enums import (
+    STATUS_COLOR_MAP,
+    ClearanceEnum,
+    ReceiptStatusEnum,
+    LogTypeEnum,
+)
+from receipt_helper.model.log import LogType
 from receipt_helper.model.receipt import Receipt, ReceiptStatus
 from receipt_helper.model.user import User
 from receipt_helper.model.usertype import UserType
@@ -13,6 +19,13 @@ def init_db(app, db):
     try:
         with app.app_context():
             db.create_all()
+            for log_type in LogTypeEnum:
+                db.session.add(
+                    LogType(
+                        id=log_type.value,
+                        name=log_type.name,
+                    )
+                )
             clearances = combinations_with_replacement(
                 ClearanceEnum, len(ClearanceEnum)
             )

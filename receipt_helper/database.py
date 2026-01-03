@@ -5,6 +5,7 @@ from sqlalchemy import exc
 
 from receipt_helper import db
 from receipt_helper.enums import ClearanceEnum, ReceiptStatusEnum
+from receipt_helper.model.log import Log, LogType
 from receipt_helper.model.receipt import File, Receipt
 from receipt_helper.model.user import User
 
@@ -170,3 +171,29 @@ def delete_user(id: int) -> bool:
     db.session.delete(user)
     db.session.commit()
     return True
+
+
+def log_action(
+    action: str,
+    log_type: LogType,
+    actionBy: int,
+    receipt: int | None = None,
+    user: int | None = None,
+):
+    log_entry = Log(
+        datetime=datetime.datetime.now(datetime.UTC),
+        logTypeId=log_type,
+        actionBy=actionBy,
+        receiptId=receipt,
+        userId=user,
+        action=action,
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+
+def get_logs():
+    logs = (
+        db.session.execute(db.select(Log).order_by(Log.datetime.desc())).scalars().all()
+    )
+    return logs
