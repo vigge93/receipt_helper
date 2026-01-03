@@ -37,3 +37,4 @@ class Receipt(db.Model):
     user: Mapped[User] = relationship()
     status: Mapped[ReceiptStatus] = relationship()
     file: Mapped[File] = relationship()
+    logs: Mapped[list["Log"]] = relationship(cascade="all")

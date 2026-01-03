@@ -17,8 +17,13 @@ from werkzeug.utils import secure_filename
 
 from receipt_helper import database
 from receipt_helper.auth import login_required
-from receipt_helper.database import get_receipt, get_user_receipts, insert_receipt
-from receipt_helper.enums import ClearanceEnum
+from receipt_helper.database import (
+    get_receipt,
+    get_user_receipts,
+    insert_receipt,
+    log_action,
+)
+from receipt_helper.enums import ClearanceEnum, LogTypeEnum
 from receipt_helper.forms.receipt_forms import SubmitReceiptForm
 from receipt_helper.hooks import post_submit_hook, pre_submit_hook
 from receipt_helper.model.receipt import File, Receipt
@@ -44,7 +49,7 @@ def add_receipt():
     else:
         users = database.get_users()
         users = [(user.id, user.name) for user in users]
-    
+
     form.user.choices = users
 
     if request.method != "POST" or not form.validate_on_submit():
@@ -99,6 +104,7 @@ def add_receipt():
     )  # type: ignore
 
     insert_receipt(receipt)
+    log_action("kvitto tillagt", LogTypeEnum.User, g.user.id, receipt.id)
     if not post_submit_hook(receipt):
         pass
     return redirect(url_for("index"))

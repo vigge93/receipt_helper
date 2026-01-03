@@ -37,4 +37,16 @@
             {% endif %}
         </div>
     </div>
+    <h3>Logg</h3>
+    <div class="list-group">
+    {% for log in receipt.logs | reverse %}
+        <div class="list-group-item list-group-item-action">
+            <div class="d-flex w-100">
+                <div class="d-flex flex-column flex-grow-1 m-2">
+                    <small>{{log.datetime.strftime('%Y-%m-%d %H:%M:%S')}} {{log.actionByUser.name}}: {{log.action}}</small>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
 {% endblock %}
