@@ -11,4 +11,25 @@
     <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('admin.add_single_user') }}">Lägg till en användare</a>
     <a class="navbar-text btn btn-primary p-2 mx-2" style="color: white;" href="{{ url_for('admin.add_many_users') }}">Lägg till flera användare</a>
 </div>
+<h3>Logg</h3>
+<div class="list-group">
+{% for log in logs %}
+    <div class="list-group-item list-group-item-action">
+        <div class="d-flex w-100">
+            <div class="d-flex flex-column flex-grow-1 m-2">
+                <small>{{log.datetime.strftime('%Y-%m-%d %H:%M:%S')}} {{log.actionByUser.name}}: {{log.action}}
+                    {%- if log.receipt %}
+                        {%- if ClearanceEnum.CFO in ClearanceEnum(g.user.userTypeId) %}
+                            : <a href="{{ url_for('main.view_receipt', id=log.receipt.id) }}">{{log.receipt.activity}}, {{log.receipt.user.name}}</a>
+                        {%- else %}
+                            : {{log.receipt.activity}}, {{log.receipt.user.name}}
+                        {%- endif %}
+                    {%- endif %}
+                    {%- if log.user %}: {{log.user.name}} &lt;{{log.user.email}}&gt;{% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
 {% endblock %}

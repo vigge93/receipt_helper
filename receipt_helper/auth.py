@@ -18,8 +18,9 @@ from receipt_helper.database import (
     get_user_by_email,
     update_user_last_login,
     update_user_password,
+    log_action,
 )
-from receipt_helper.enums import ClearanceEnum, ReceiptStatusEnum
+from receipt_helper.enums import ClearanceEnum, LogTypeEnum, ReceiptStatusEnum
 from receipt_helper.forms.auth_forms import ChangePasswordForm, LoginForm
 from receipt_helper.model.user import User
 
@@ -91,6 +92,7 @@ def login():
     session["user_id"] = user.id  # type: ignore
     update_user_last_login(user.id)  # type: ignore
     session.permanent = True
+    log_action("loggade in", LogTypeEnum.User, user.id, user=user.id)
     return redirect(url_for("index"))
 
 
@@ -115,6 +117,7 @@ def change_password():
 
     if not update_user_password(g.user.id, generate_password_hash(new_password)):
         abort(404, "Användare hittades ej.")
+    log_action("updaterade lösenord", LogTypeEnum.User, g.user.id, user=user.id)
     return redirect(url_for("index"))
 
 

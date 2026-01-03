@@ -21,12 +21,14 @@ from receipt_helper import database
 from receipt_helper.auth import admin_required, login_required
 from receipt_helper.database import (
     add_user_role,
+    get_logs,
     get_user,
     get_users,
+    log_action,
     remove_user_role,
     reset_user_password,
 )
-from receipt_helper.enums import ClearanceEnum
+from receipt_helper.enums import ClearanceEnum, LogTypeEnum
 from receipt_helper.forms.user_forms import (
     AddManyUsersForm,
     AddSingleUserForm,
@@ -42,7 +44,8 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 @login_required
 @admin_required
 def index():
-    return render_template("admin/index.html")
+    logs = get_logs()
+    return render_template("admin/index.html", logs=logs)
 
 
 @bp.route("/list_users")
@@ -82,6 +85,8 @@ def add_user(name: str, email: str) -> bool:
     if not database.add_user(user):
         flash(f"Fel vid skapandet av konto för {name}!")
         return False
+
+    log_action(f"användare tillagd", LogTypeEnum.Admin, g.user.id, user=user.id)
 
     try:
         send_email(
@@ -156,6 +161,8 @@ def update_user(id: int):
         flash("Något gick fel!")
         return redirect(url_for("admin.list_users"))
 
+    log_action(f"användare updaterad", LogTypeEnum.Admin, g.user.id, user=user.id)
+
     return redirect(url_for("admin.list_users"))
 
 
@@ -173,6 +180,8 @@ def reset_password(id: int):
         return redirect(url_for("admin.list_users"))
 
     email = user.email
+
+    log_action(f"lösenord nollställt", LogTypeEnum.Admin, g.user.id, user=user.id)
 
     try:
         send_email(
@@ -205,6 +214,7 @@ def make_admin(id: int):
     if not add_user_role(id, ClearanceEnum.Admin):
         flash("Användare hittades inte!")
         return redirect(url_for("admin.list_users"))
+    log_action(f"användare befodrad till admin", LogTypeEnum.Admin, g.user.id, user=id)
     return redirect(url_for("admin.list_users"))
 
 
@@ -216,6 +226,7 @@ def make_cfo(id: int):
     if not add_user_role(id, ClearanceEnum.CFO):
         flash("Användare hittades inte!")
         return redirect(url_for("admin.list_users"))
+    log_action(f"användare befodrad till CFO", LogTypeEnum.Admin, g.user.id, user=id)
     return redirect(url_for("admin.list_users"))
 
 
@@ -230,6 +241,9 @@ def remove_admin(id: int):
     if not remove_user_role(id, ClearanceEnum.Admin):
         flash("Användare hittades inte!")
         return redirect(url_for("admin.list_users"))
+    log_action(
+        f"användare degraderad från admin", LogTypeEnum.Admin, g.user.id, user=id
+    )
     return redirect(url_for("admin.list_users"))
 
 
@@ -241,6 +255,7 @@ def remove_cfo(id: int):
     if not remove_user_role(id, ClearanceEnum.CFO):
         flash("Användare hittades inte!")
         return redirect(url_for("admin.list_users"))
+    log_action(f"användare degraderad från CFO", LogTypeEnum.Admin, g.user.id, user=id)
     return redirect(url_for("admin.list_users"))
 
 
@@ -256,6 +271,7 @@ def delete_user(id: int):
     if not database.delete_user(id):
         flash("Användare hittades inte!")
         return redirect(url_for("admin.list_users"))
+    log_action(f"användare raderad", LogTypeEnum.Admin, g.user.id, user=id)
     return redirect(url_for("admin.list_users"))
 
 
