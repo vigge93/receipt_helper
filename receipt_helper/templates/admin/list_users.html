@@ -13,27 +13,28 @@
                         <div class="d-flex my-2 justify-content-between">
                             <div>
                                 <p>{{user.name}}</p>
-                                <a class="btn btn-primary px-2 py-0" href="{{ url_for('admin.update_user', id=user.id) }}">Ändra användare</a>
                             </div>
                             <small>{{ user.email }}</small>
                             <small>Senaste inloggning: {{ user.lastLogin.strftime("%Y-%m-%d %H:%M") if user.lastLogin else "Aldrig" }}</small>
-                            <small>Användartyp: {{ user.userType.name }}</small>
                             <div>
+                                <a class="p-2" href="{{ url_for('admin.update_user', id=user.id) }}" title="Ändra användare"><i class="fa-solid fa-pen-to-square"></i></a>
                                 {% if user.id != g.user.id %}
                                     {% if ClearanceEnum.Admin in ClearanceEnum(user.userTypeId)%}
-                                        <a class="btn btn-warning p-2" href="{{ url_for('admin.remove_admin', id=user.id) }}">Ta bort admin</a>
+                                        <a class="p-2" href="{{ url_for('admin.remove_admin', id=user.id) }}" style="color: orange" title="Ta bort admin">Admin: <i class="fa-solid fa-square-check"></i></a>
                                     {% else %}
-                                        <a class="btn btn-warning p-2" href="{{ url_for('admin.make_admin', id=user.id) }}">Gör till admin</a>
+                                        <a class="p-2" href="{{ url_for('admin.make_admin', id=user.id) }}" style="color: orange" title="Lägg till admin">Admin: <i class="fa-regular fa-square"></i></a>
                                     {% endif %}
+                                {% else %}
+                                    <span style="color:lightgrey">Admin: <i class="fa-solid {{ (ClearanceEnum.Admin in ClearanceEnum(user.userTypeId) and 'fa-square-check') or 'fa-square'}}"></i></span>
                                 {% endif %}
                                 {% if ClearanceEnum.CFO in ClearanceEnum(user.userTypeId)%}
-                                    <a class="btn btn-warning p-2" href="{{ url_for('admin.remove_cfo', id=user.id) }}">Ta bort CFO</a>
+                                    <a class="p-2" href="{{ url_for('admin.remove_cfo', id=user.id) }}" style="color: orange" title="Ta bort CFO">CFO: <i class="fa-solid fa-square-check"></i></a>
                                 {% else %}
-                                    <a class="btn btn-warning p-2" href="{{ url_for('admin.make_cfo', id=user.id) }}">Gör till CFO</a>
+                                    <a class="p-2" href="{{ url_for('admin.make_cfo', id=user.id) }}" style="color: orange" title="Lägg till CFO">CFO: <i class="fa-regular fa-square"></i></a>
                                 {% endif %}
-                                <a class="btn btn-primary p-2" style="color: white;" href="{{ url_for('admin.reset_password', id=user.id) }}">Nollställ lösenord</a>
+                                <a class="p-2" style="color: black;" href="{{ url_for('admin.reset_password', id=user.id) }}" title="Återställ lösenord"><i class="fa-solid fa-arrow-rotate-left"></i></a>
                                 {% if user.id != g.user.id %}
-                                    <a class="btn btn-danger p-2" style="color: white;" onclick="return confirm('Är du säker?')" href="{{ url_for('admin.delete_user', id=user.id) }}">Radera användare</a>
+                                    <a class="p-2" style="color: red;" onclick="return confirm('Är du säker?')" href="{{ url_for('admin.delete_user', id=user.id) }}" title="Radera användare"><i class="fas fa-trash"></i></a>
                                 {% endif %}
                                 </div>
                         </div>
