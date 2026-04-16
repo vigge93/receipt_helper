@@ -61,6 +61,7 @@ def add_receipt():
         return redirect(url_for("main.add_receipt"))
 
     receipt_date = form.receipt_date.data
+    receipt_date_str = receipt_date.isoformat()
     activity = form.activity.data
     amount = int(form.amount.data * 100)
     submit_date = datetime.date.today()
@@ -81,7 +82,7 @@ def add_receipt():
     )
 
     filename = secure_filename(
-        f"{submit_date_str}_{user.name}{os.path.splitext(file.filename)[-1]}"
+        f"{receipt_date_str}_{user.name}{os.path.splitext(file.filename)[-1]}"
     )
     filename = os.path.join(
         current_app.config["RECEIPTS_STORAGE_PATH"],

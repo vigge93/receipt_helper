@@ -102,7 +102,7 @@ def approve_receipt(id: int):
         flash("Kvitto hittades ej!")
         return redirect(url_for("cfo.view_receipts"))
 
-    move_file(receipt.file, "approved", receipt.submit_date.date())
+    move_file(receipt.file, "approved", receipt.receipt_date.date())
 
     log_action("kvitto godkänt", LogTypeEnum.CFO, g.user.id, receipt=id)
 
@@ -134,7 +134,7 @@ def reject_receipt(id: int):
         flash("Kvitto hittades ej!")
         return redirect(url_for("cfo.view_receipts"))
 
-    move_file(receipt.file, "rejected", receipt.submit_date.date())
+    move_file(receipt.file, "rejected", receipt.receipt_date.date())
 
     log_action("kvitto nekat", LogTypeEnum.CFO, g.user.id, receipt=id)
 
